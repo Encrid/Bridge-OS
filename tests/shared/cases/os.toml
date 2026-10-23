@@ -1,0 +1,11 @@
+[[case]]
+name = "the os layer runs every call and its error paths"
+run = ["{out}/os{exe}", "{case}"]
+claims = { matches = ["os ok"] }
+false = { run = ["{out}/os{exe}", "{case}", "fail"] }
+
+[[case]]
+name = "the os layer refuses when a resource runs out"
+run = ["{out}/counted{exe}"]
+claims = { matches = ["counted ok"] }
+false = { run = ["{out}/counted{exe}", "fail"] }

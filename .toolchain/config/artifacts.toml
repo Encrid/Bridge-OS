@@ -1,0 +1,42 @@
+[[artifact]]
+name = "os"
+kind = "archive"
+sources = ["src/os/{system}/*.c"]
+include = ["include/os"]
+flags = ["{quiet}", "{system_defines}"]
+
+[[artifact]]
+name = "fixture"
+kind = "library"
+test = true
+folder = "built"
+path = true
+sources = ["tests/fixture.c"]
+
+[[artifact]]
+name = "os"
+kind = "program"
+test = true
+sources = ["tests/os/*.c", "src/os/{system}/*.c"]
+include = ["include/os"]
+defines = ["{paths}"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "counted_os"
+kind = "archive"
+test = true
+sources = ["src/os/{system}/*.c"]
+include = ["include/os"]
+defines = ["malloc=counted_malloc", "calloc=counted_calloc", "realloc=counted_realloc", "free=counted_free", "{counted_system}"]
+flags = ["{quiet}", "{system_defines}"]
+
+[[artifact]]
+name = "counted"
+kind = "program"
+test = true
+sources = ["tests/counted/*.c"]
+include = ["include/os", "tests/counted"]
+defines = ["COUNTED"]
+link = ["{out}/counted_os.a"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]

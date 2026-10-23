@@ -1,0 +1,3 @@
+[compose.base]
+headers = ["include/os/**/*.h"]
+assets = ["src/os/**/*.c", "src/os/**/*.h"]

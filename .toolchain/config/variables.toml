@@ -1,0 +1,2 @@
+[variables]
+quiet = ["-Wno-missing-field-initializers"]

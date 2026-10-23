@@ -1,0 +1,7 @@
+[project]
+name = "bridge-os"
+
+[test]
+cases = "tests/shared/cases"
+timeout = 120
+copies = 1
