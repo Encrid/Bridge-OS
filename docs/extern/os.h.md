@@ -9,11 +9,9 @@ This layer is the only code that differs by platform, and it depends on nothing 
 It includes `<stddef.h>` and `<stdint.h>` and no other header.
 Bridge reaches memory mapping, shared libraries, threads and the clock through this layer and nowhere else.
 
-The build makes the layer into an archive `os`.
-The library and each backend link this archive.
+The build makes the layer into an archive `os`. A release ships `os.a` and `include/os.h` for each target.
+Each project that uses the layer fetches them from the release and links `os.a`: the library, each backend and the host.
 The linker takes only the functions that the binary calls, so none imports a function it does not use.
-The host compiles the layer, since it alone uses the folders, paths and locks.
-A backend that is a project of its own keeps a copy of the layer.
 
 `include/os.h` declares each function once.
 `src/posix` holds the functions for Linux and macOS, and `src/windows` holds the same functions for Windows.
