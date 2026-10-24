@@ -1,4 +1,4 @@
-# src/os/windows/path.c
+# src/windows/path.c
 
 On Windows this file turns a path into its whole form.
 `os_path_whole` wraps `_fullpath` and lets it allocate the buffer.

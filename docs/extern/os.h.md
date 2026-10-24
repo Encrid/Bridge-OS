@@ -1,4 +1,4 @@
-# include/os/os.h
+# include/os.h
 
 This header gives the operating system as Bridge, its backends and its host need it.
 That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, paths and locks.
@@ -15,9 +15,9 @@ The linker takes only the functions that the binary calls, so none imports a fun
 The host compiles the layer, since it alone uses the folders, paths and locks.
 A backend that is a project of its own keeps a copy of the layer.
 
-`include/os/os.h` declares each function once.
-`src/os/posix` holds the functions for Linux and macOS, and `src/os/windows` holds the same functions for Windows.
-The build compiles `src/os/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
+`include/os.h` declares each function once.
+`src/posix` holds the functions for Linux and macOS, and `src/windows` holds the same functions for Windows.
+The build compiles `src/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
 So no file of the layer asks which platform it is compiled for.
 
 ## The imports
