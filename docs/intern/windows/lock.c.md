@@ -1,4 +1,4 @@
-# src/os/windows/lock.c
+# src/windows/lock.c
 
 `os_lock` takes the run lock for a Windows process.
 

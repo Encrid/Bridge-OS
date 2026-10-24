@@ -1,4 +1,4 @@
-# src/os/posix/path.c
+# src/posix/path.c
 
 This file resolves a path to its whole form on Linux and macOS.
 `os_path_whole` wraps `realpath` and asks it to allocate the result.
