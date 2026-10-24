@@ -9,3 +9,9 @@ name = "the os layer refuses when a resource runs out"
 run = ["{out}/counted{exe}"]
 claims = { matches = ["counted ok"] }
 false = { run = ["{out}/counted{exe}", "fail"] }
+
+[[case]]
+name = "the clock of the os layer moves in steps below a microsecond"
+run = ["{out}/clock{exe}", "1000"]
+claims = { line = ["step below 1000 ns"] }
+false = { run = ["{out}/clock{exe}", "1"] }

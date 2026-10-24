@@ -1,3 +1,5 @@
+[package]
+proof = "tests/package/proof.c"
+
 [compose.base]
-headers = ["include/os/**/*.h"]
-assets = ["src/os/**/*.c", "src/os/**/*.h"]
+headers = ["include/**/*.h"]

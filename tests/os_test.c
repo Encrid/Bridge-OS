@@ -14,6 +14,32 @@ static void set_flag(void *arg)
     *(int *)arg = 7;
 }
 
+static void set_later(void *arg)
+{
+    os_event_t *pause = os_event_create();
+
+    if (pause)
+        os_event_wait(pause, OS_SECOND / 20);
+    os_event_free(pause);
+    os_event_set(arg);
+}
+
+static int wait_for_thread(void)
+{
+    os_event_t *e = os_event_create();
+    os_thread_t *t;
+
+    if (!e)
+        return (printf("FAIL: event to wait for\n"), 1);
+    t = os_thread_start(set_later, e);
+    if (!t)
+        return (printf("FAIL: thread that sets\n"), 1);
+    os_event_wait(e, OS_FOREVER);
+    os_thread_join(t);
+    os_event_free(e);
+    return (0);
+}
+
 int main(int argc, char **argv)
 {
     const char *dir;
@@ -62,6 +88,8 @@ int main(int argc, char **argv)
     os_event_wait(e, OS_FOREVER);
     os_event_free(e);
     os_event_free(nullptr);
+    if (wait_for_thread())
+        return (1);
 
     t = os_thread_start(set_flag, &flag);
     if (!t)

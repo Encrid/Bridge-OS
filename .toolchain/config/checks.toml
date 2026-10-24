@@ -1,5 +1,5 @@
 [[branches.exception]]
-path = "src/os/windows/library.c"
+path = "src/windows/library.c"
 line = 27
 col = 9
 side = "true"
@@ -7,7 +7,7 @@ system = "windows"
 why = "GetFullPathNameW gives zero only for a path it cannot resolve; to_wide has already made the path a valid wide string of at most MAX_PATH-1 characters, so the tests do not force it."
 
 [[branches.exception]]
-path = "src/os/windows/library.c"
+path = "src/windows/library.c"
 line = 27
 col = 17
 side = "true"
@@ -15,7 +15,7 @@ system = "windows"
 why = "The reachable refusal of an over-long path is at to_wide; a wide path that fits yet whose absolute form passes MAX_PATH depends on the working directory, which the tests do not force."
 
 [[branches.exception]]
-path = "src/os/windows/folder.c"
+path = "src/windows/folder.c"
 line = 22
 col = 9
 side = "false"
@@ -23,7 +23,7 @@ system = "windows"
 why = "os_folder_make's mkdir fails only when the lock folder already exists, and then _stat finds it, so the not-found branch is not reached."
 
 [[branches.exception]]
-path = "src/os/posix/folder.c"
+path = "src/posix/folder.c"
 line = 22
 col = 9
 side = "false"

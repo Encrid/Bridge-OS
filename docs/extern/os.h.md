@@ -1,4 +1,4 @@
-# include/os/os.h
+# include/os.h
 
 This header gives the operating system as Bridge, its backends and its host need it.
 That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, paths and locks.
@@ -9,15 +9,13 @@ This layer is the only code that differs by platform, and it depends on nothing 
 It includes `<stddef.h>` and `<stdint.h>` and no other header.
 Bridge reaches memory mapping, shared libraries, threads and the clock through this layer and nowhere else.
 
-The build makes the layer into an archive `os`.
-The library and each backend link this archive.
+The build makes the layer into an archive `os`. A release ships `os.a` and `include/os.h` for each target.
+Each project that uses the layer fetches them from the release and links `os.a`: the library, each backend and the host.
 The linker takes only the functions that the binary calls, so none imports a function it does not use.
-The host compiles the layer, since it alone uses the folders, paths and locks.
-A backend that is a project of its own keeps a copy of the layer.
 
-`include/os/os.h` declares each function once.
-`src/os/posix` holds the functions for Linux and macOS, and `src/os/windows` holds the same functions for Windows.
-The build compiles `src/os/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
+`include/os.h` declares each function once.
+`src/posix` holds the functions for Linux and macOS, and `src/windows` holds the same functions for Windows.
+The build compiles `src/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
 So no file of the layer asks which platform it is compiled for.
 
 ## The imports
@@ -194,7 +192,7 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_thread_start` | Starts a thread that runs `fn(arg)`. Gives `nullptr` on failure. |
 | `os_thread_join` | Waits for a thread to end, and frees what `os_thread_start` gave. |
 | `os_get_thread_id` | Gives a number for the calling thread that no other live thread has. It is never 0. |
-| `os_get_now` | Gives nanoseconds from a clock that only rises. |
+| `os_get_now` | Gives nanoseconds from a clock that only rises. On each target, its step is below a microsecond. |
 | `os_mutex_create` | Makes a mutex. Gives `nullptr` on failure. |
 | `os_mutex_free` | Frees a mutex that no thread holds. A null `m` does nothing. |
 | `os_mutex_lock` | Takes a mutex, and waits while another thread holds it. |
