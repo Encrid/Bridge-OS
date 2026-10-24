@@ -1,7 +1,7 @@
-# src/os/posix/memory.c
+# src/posix/memory.c
 
-This file gives the address space of `include/os/os.h` on Linux and macOS: a range mapped with no access, opened to reading and writing, and unmapped.
-Each function keeps the contract of `docs/extern/os/os.h.md`, *Functions*.
+This file gives the address space of `include/os.h` on Linux and macOS: a range mapped with no access, opened to reading and writing, and unmapped.
+Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
 
 ## The range
 
