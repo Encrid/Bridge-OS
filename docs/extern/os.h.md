@@ -9,8 +9,10 @@ This layer is the only code that differs by platform, and it depends on nothing 
 It includes `<stddef.h>` and `<stdint.h>` and no other header.
 Bridge reaches memory mapping, shared libraries, threads and the clock through this layer and nowhere else.
 
-The build makes the layer into an archive `os`. A release ships `os.a` and `include/os.h` for each target.
+The build makes the layer into an archive `os`. A release ships `os.a`, `include/os.h` and `leaks.toml` for each target.
 Each project that uses the layer fetches them from the release and links `os.a`: the library, each backend and the host.
+`leaks.toml` names each function that takes a resource, and the function that gives it back.
+A project names the file in `[leaks] with`, so that `test --leaks` counts the resources of the layer that its code takes.
 The linker takes only the functions that the binary calls, so none imports a function it does not use.
 
 `include/os.h` declares each function once.
