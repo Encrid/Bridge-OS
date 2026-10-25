@@ -1,26 +1,37 @@
 # src/windows/library.c
 
-This file gives `include/os.h` its shared libraries on Windows: a library opened, looked into and closed.
+This file gives `include/os.h` its shared libraries on Windows: it opens, looks into, pins and closes a library.
 Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
+
+## The path
+
+`widened` turns a path of UTF-8 into the wide form of Windows, with `MultiByteToWideChar`.
+A name with no `/` and no `\` is a bare name, and `widened` keeps it as it is.
+For a path, it makes the path full with `GetFullPathNameW`, since Windows looks beside a library only for a full path.
 
 ## Opening
 
-A name with no `/` and no `\` is a bare name: `os_lib_open` gives it to `LoadLibraryA` and the search of Windows.
-Windows looks beside a library for what the library needs only when it is asked, and only for a full path in its own form.
-So for a path, `os_lib_open` first makes the path full with `GetFullPathNameA`.
-Then it opens the library with `LoadLibraryExA` and `LOAD_WITH_ALTERED_SEARCH_PATH`, which asks for that search.
+`os_lib_open` gives a bare name to `LoadLibraryW` and the search of Windows.
+For a path, it opens the full path with `LoadLibraryExW` and `LOAD_WITH_ALTERED_SEARCH_PATH`.
+That flag asks Windows to look beside the library for what the library needs.
+
+## Pinning
+
+`os_lib_pin` makes the same path, and calls `GetModuleHandleExW` with `GET_MODULE_HANDLE_EX_FLAG_PIN`.
+Windows then keeps the library until the end of the process, no matter how many times `FreeLibrary` closes it.
+If no library of that path is open, `GetModuleHandleExW` fails, and `os_lib_pin` gives -1.
 
 ## Limits
 
-The full path must be shorter than `MAX_PATH` bytes: a longer path gives `nullptr`.
-With a code page of one byte for each character, `GetFullPathNameA` gives 0 for such a path.
-With a code page such as UTF-8, a path of fewer than `MAX_PATH` characters can have `MAX_PATH` bytes or more.
-`GetFullPathNameA` then gives the size that it needs and fills nothing, and `os_lib_open` refuses that too.
+A path must be shorter than `MAX_PATH` wide characters, and so must its full form.
+For a longer path, `MultiByteToWideChar` or `GetFullPathNameW` fails, and `widened` gives false.
 
 ## Functions
 
 | Function | Result |
 | --- | --- |
-| `os_lib_open` | Opens a bare name with `LoadLibraryA`, and a path with `LoadLibraryExA` after `GetFullPathNameA`. Gives `nullptr` on failure. |
+| `widened(path, full, bare)` | Gives the wide form of a path into `full`, as *The path* tells, and tells if the name is bare. Gives false for a path that is too long. |
+| `os_lib_open` | Opens a bare name with `LoadLibraryW`, and a path with `LoadLibraryExW`. Gives `nullptr` on failure. |
 | `os_lib_get_symbol` | Gives the result of `GetProcAddress` for `name` in the library: the address, or `nullptr`. |
 | `os_lib_close` | Closes the library with `FreeLibrary`. |
+| `os_lib_pin` | Keeps the open library of `path` until the end of the process with `GetModuleHandleExW`. Gives 0, or -1. |

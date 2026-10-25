@@ -9,8 +9,10 @@ This layer is the only code that differs by platform, and it depends on nothing 
 It includes `<stddef.h>` and `<stdint.h>` and no other header.
 Bridge reaches memory mapping, shared libraries, threads and the clock through this layer and nowhere else.
 
-The build makes the layer into an archive `os`. A release ships `os.a` and `include/os.h` for each target.
+The build makes the layer into an archive `os`. A release ships `os.a`, `include/os.h` and `leaks.toml` for each target.
 Each project that uses the layer fetches them from the release and links `os.a`: the library, each backend and the host.
+`leaks.toml` names each function that takes a resource, and the function that gives it back.
+A project names the file in `[leaks] with`, so that `test --leaks` counts the resources of the layer that its code takes.
 The linker takes only the functions that the binary calls, so none imports a function it does not use.
 
 `include/os.h` declares each function once.
@@ -58,6 +60,7 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_lib_open` | Opens a shared library, or gives `nullptr`. For a path, the loader looks there for the library and for what it needs, since a backend brings its runtime beside itself. For a bare name, the loader uses the search of the operating system. |
 | `os_lib_get_symbol` | Gives where a library has what it exports as `name`, or `nullptr`. |
 | `os_lib_close` | Closes a library. Each caller passes a library that `os_lib_open` gave. |
+| `os_lib_pin` | Keeps the open library of `path` in the process until its end. A later `os_lib_close` closes the handle, and the library stays. A second pin of a library changes nothing. Gives 0, or -1 if no library of `path` is open. On Linux and macOS, a process can pin at most 64 libraries. |
 | `os_thread_start` | Starts a thread that runs `fn(arg)`. Gives `nullptr` on failure. |
 | `os_thread_join` | Waits for a thread to end, and frees what `os_thread_start` gave. |
 | `os_get_thread_id` | Gives a number for the calling thread that no other live thread has. It is never 0. |

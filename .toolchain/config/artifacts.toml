@@ -6,12 +6,25 @@ include = ["include"]
 flags = ["{quiet}", "{system_defines}"]
 
 [[artifact]]
+name = "leaks.toml"
+kind = "file"
+sources = [".toolchain/config/leaks.toml"]
+
+[[artifact]]
 name = "fixture"
 kind = "library"
 test = true
 folder = "built"
 path = true
 sources = ["tests/fixture.c"]
+
+[[artifact]]
+name = "fixture_two"
+kind = "library"
+test = true
+folder = "built"
+path = true
+sources = ["tests/fixture_two.c"]
 
 [[artifact]]
 name = "os"

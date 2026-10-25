@@ -1,18 +1,18 @@
 [[branches.exception]]
 path = "src/windows/library.c"
-line = 27
-col = 9
-side = "true"
+line = 21
+col = 13
+side = "false"
 system = "windows"
-why = "GetFullPathNameW gives zero only for a path it cannot resolve; to_wide has already made the path a valid wide string of at most MAX_PATH-1 characters, so the tests do not force it."
+why = "GetFullPathNameW gives zero only for a path it cannot resolve; widened has already made the path a valid wide string of at most MAX_PATH-1 characters, so the tests do not force it."
 
 [[branches.exception]]
 path = "src/windows/library.c"
-line = 27
-col = 17
-side = "true"
+line = 21
+col = 20
+side = "false"
 system = "windows"
-why = "The reachable refusal of an over-long path is at to_wide; a wide path that fits yet whose absolute form passes MAX_PATH depends on the working directory, which the tests do not force."
+why = "The reachable refusal of an over-long path is at MultiByteToWideChar; a wide path that fits yet whose full form passes MAX_PATH depends on the working directory, which the tests do not force."
 
 [[branches.exception]]
 path = "src/windows/folder.c"
@@ -29,3 +29,19 @@ col = 9
 side = "false"
 system = "posix"
 why = "os_folder_make's mkdir fails only when the folder already exists, and then stat finds it, so the not-found branch is not reached."
+
+[[branches.exception]]
+path = "src/posix/library.c"
+line = 48
+col = 34
+side = "true"
+system = "posix"
+why = "The table of pins fills only after 64 libraries are pinned, and no case opens that many libraries."
+
+[[branches.exception]]
+path = "src/posix/library.c"
+line = 54
+col = 13
+side = "false"
+system = "posix"
+why = "A pin fails after its dlopen only when the table of pins is full, and no case opens 64 libraries."

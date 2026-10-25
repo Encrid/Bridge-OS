@@ -29,6 +29,8 @@ void os_release(void *base, size_t reserve);
 
 void os_lib_close(void *lib);
 
+[[nodiscard]] int os_lib_pin(const char *path);
+
 [[nodiscard]] os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg);
 
 void os_thread_join(os_thread_t *t);
