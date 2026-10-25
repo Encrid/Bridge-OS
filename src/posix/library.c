@@ -9,12 +9,7 @@
 
 void *os_lib_open(const char *path)
 {
-    int flags = RTLD_NOW | RTLD_LOCAL;
-
-#ifdef C23B_KEEP_LOADED
-    flags |= RTLD_NODELETE;
-#endif
-    return (dlopen(path, flags));
+    return (dlopen(path, RTLD_NOW | RTLD_LOCAL));
 }
 
 void *os_lib_get_symbol(void *lib, const char *name)
