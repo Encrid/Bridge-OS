@@ -12,9 +12,13 @@ The loader looks beside a library that a path names, and searches for a bare nam
 
 ## Pinning
 
-`os_lib_pin` calls `dlopen` with `RTLD_NOLOAD` and `RTLD_NODELETE`, and then `dlclose` on the handle that it got.
+`os_lib_pin` calls `dlopen` with `RTLD_NOLOAD` and `RTLD_NODELETE`.
 `RTLD_NOLOAD` opens nothing: `dlopen` gives the library only if it is already open, else `nullptr`.
-`RTLD_NODELETE` then stays on the library, so no later `dlclose` unloads it.
+On Linux, `RTLD_NODELETE` stays on the library, so no later `dlclose` unloads it.
+On macOS, the flag did not keep a library after its last `dlclose`. So the file keeps one handle of each pinned library, and never closes it.
+
+The kept handles are in a table of `OS_PINS` entries, under a mutex, because two threads can pin at the same time.
+If the table holds the handle already, `os_lib_pin` closes the new handle. Thus a second pin of a library adds no handle.
 
 ## Closing
 
@@ -27,4 +31,9 @@ The loader looks beside a library that a path names, and searches for a bare nam
 | `os_lib_open` | Opens the library with `dlopen`. Gives `nullptr` on failure. |
 | `os_lib_get_symbol` | Gives what `dlsym` finds of `name` in the library, or `nullptr`. |
 | `os_lib_close` | Closes the library with `dlclose`. |
-| `os_lib_pin` | Pins the open library of `path`, as *Pinning* tells. Gives 0, or -1 if `dlopen` finds no such library. |
+| `held(lib)` | Tells if the table of kept handles holds `lib`. |
+| `os_lib_pin` | Pins the open library of `path`, as *Pinning* tells. Gives 0, or -1 if `dlopen` finds no such library, or if the table is full. |
+
+## Limits
+
+The table holds `OS_PINS` libraries, which is 64. A pin of one more library gives -1, and closes its new handle.
