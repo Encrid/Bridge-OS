@@ -1,18 +1,18 @@
 [[branches.exception]]
 path = "src/windows/library.c"
-line = 27
-col = 9
-side = "true"
+line = 21
+col = 13
+side = "false"
 system = "windows"
-why = "GetFullPathNameW gives zero only for a path it cannot resolve; to_wide has already made the path a valid wide string of at most MAX_PATH-1 characters, so the tests do not force it."
+why = "GetFullPathNameW gives zero only for a path it cannot resolve; widened has already made the path a valid wide string of at most MAX_PATH-1 characters, so the tests do not force it."
 
 [[branches.exception]]
 path = "src/windows/library.c"
-line = 27
-col = 17
-side = "true"
+line = 21
+col = 20
+side = "false"
 system = "windows"
-why = "The reachable refusal of an over-long path is at to_wide; a wide path that fits yet whose absolute form passes MAX_PATH depends on the working directory, which the tests do not force."
+why = "The reachable refusal of an over-long path is at MultiByteToWideChar; a wide path that fits yet whose full form passes MAX_PATH depends on the working directory, which the tests do not force."
 
 [[branches.exception]]
 path = "src/windows/folder.c"
