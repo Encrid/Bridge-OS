@@ -5,8 +5,9 @@
 */
 #include "greet.h"
 #include "extra.h"
+#include "outside.h"
 
 int main(void)
 {
-    return ((greeting() == nullptr) + EXTRA_STATUS);
+    return ((greeting() == nullptr) + (outside() == nullptr) + EXTRA_STATUS);
 }
