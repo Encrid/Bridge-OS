@@ -19,6 +19,14 @@ path = true
 sources = ["tests/fixture.c"]
 
 [[artifact]]
+name = "fixture_two"
+kind = "library"
+test = true
+folder = "built"
+path = true
+sources = ["tests/fixture_two.c"]
+
+[[artifact]]
 name = "os"
 kind = "program"
 test = true

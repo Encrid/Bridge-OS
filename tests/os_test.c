@@ -163,6 +163,10 @@ int main(int argc, char **argv)
     os_lib_close(lib);
     if (os_lib_pin(FIXTURE_PATH))
         return (printf("FAIL: keep a pinned library after its close\n"), 1);
+    lib = os_lib_open(FIXTURE_TWO_PATH);
+    if (!lib || os_lib_pin(FIXTURE_TWO_PATH))
+        return (printf("FAIL: pin a second library\n"), 1);
+    os_lib_close(lib);
 
     printf("os ok\n");
     return (0);
