@@ -1,6 +1,6 @@
 # src/windows/library.c
 
-This file gives `include/os.h` its shared libraries on Windows: a library opened, looked into, pinned and closed.
+This file gives `include/os.h` its shared libraries on Windows: it opens, looks into, pins and closes a library.
 Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
 
 ## The path
