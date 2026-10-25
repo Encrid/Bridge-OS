@@ -21,3 +21,13 @@ void os_lib_close(void *lib)
 {
     dlclose(lib);
 }
+
+int os_lib_pin(const char *path)
+{
+    void *lib = dlopen(path, RTLD_NOW | RTLD_NOLOAD | RTLD_NODELETE);
+
+    if (!lib)
+        return (-1);
+    dlclose(lib);
+    return (0);
+}
