@@ -1,6 +1,6 @@
 # src/posix/library.c
 
-This file gives the shared libraries of `include/os.h` on Linux and macOS: a library opened, looked into and closed.
+This file gives the shared libraries of `include/os.h` on Linux and macOS: a library opened, looked into, pinned and closed.
 Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
 
 ## Opening
@@ -9,6 +9,12 @@ Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
 `RTLD_NOW` resolves every symbol of the library before `dlopen` returns.
 `RTLD_LOCAL` keeps the names of the library to itself: they do not resolve the symbols of a library that opens later.
 The loader looks beside a library that a path names, and searches for a bare name, with no flag of this file.
+
+## Pinning
+
+`os_lib_pin` calls `dlopen` with `RTLD_NOLOAD` and `RTLD_NODELETE`, and then `dlclose` on the handle that it got.
+`RTLD_NOLOAD` opens nothing: `dlopen` gives the library only if it is already open, else `nullptr`.
+`RTLD_NODELETE` then stays on the library, so no later `dlclose` unloads it.
 
 ## Closing
 
@@ -21,3 +27,4 @@ The loader looks beside a library that a path names, and searches for a bare nam
 | `os_lib_open` | Opens the library with `dlopen`. Gives `nullptr` on failure. |
 | `os_lib_get_symbol` | Gives what `dlsym` finds of `name` in the library, or `nullptr`. |
 | `os_lib_close` | Closes the library with `dlclose`. |
+| `os_lib_pin` | Pins the open library of `path`, as *Pinning* tells. Gives 0, or -1 if `dlopen` finds no such library. |
