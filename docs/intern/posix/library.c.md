@@ -31,7 +31,7 @@ If the table holds the handle already, `os_lib_pin` closes the new handle. Thus 
 | `os_lib_open` | Opens the library with `dlopen`. Gives `nullptr` on failure. |
 | `os_lib_get_symbol` | Gives what `dlsym` finds of `name` in the library, or `nullptr`. |
 | `os_lib_close` | Closes the library with `dlclose`. |
-| `held(lib)` | Tells if the table of kept handles holds `lib`. |
+| `held(libs, used, lib)` | Tells if the first `used` kept handles of `libs` hold `lib`. |
 | `os_lib_pin` | Pins the open library of `path`, as *Pinning* tells. Gives 0, or -1 if `dlopen` finds no such library, or if the table is full. |
 
 ## Limits
