@@ -153,6 +153,16 @@ int main(int argc, char **argv)
     if (answer() != 42)
         return (printf("FAIL: call the symbol\n"), 1);
     os_lib_close(lib);
+    if (os_lib_pin(FIXTURE_PATH) != -1)
+        return (printf("FAIL: pin a closed library\n"), 1);
+    if (os_lib_pin(longname) != -1 || os_lib_pin("no_such_library") != -1)
+        return (printf("FAIL: pin a library that is not open\n"), 1);
+    lib = os_lib_open(FIXTURE_PATH);
+    if (!lib || os_lib_pin(FIXTURE_PATH))
+        return (printf("FAIL: pin the fixture\n"), 1);
+    os_lib_close(lib);
+    if (os_lib_pin(FIXTURE_PATH))
+        return (printf("FAIL: keep a pinned library after its close\n"), 1);
 
     printf("os ok\n");
     return (0);
