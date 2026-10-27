@@ -25,6 +25,7 @@ Python 3.11 or a later version.
 
 | Document | Content |
 | --- | --- |
+| `docs/contributing/needs.md` | The needs that each decision meets, and how to weigh a decision. |
 | `docs/contributing/coding_style.md` | How to write the code. |
 | `docs/contributing/documentation_style.md` | How to write the documents. |
 | `docs/contributing/tests.md` | How to write the tests. |
