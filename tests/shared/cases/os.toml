@@ -18,15 +18,15 @@ false = { run = ["{out}/clock{exe}", "1"] }
 
 [[case]]
 name = "a wait of less than a millisecond lasts until its nanoseconds pass"
-run = ["{out}/wait{exe}", "500000", "0"]
-claims = { line = ["the wait took at least 500000 ns"] }
-false = { run = ["{out}/wait{exe}", "500000", "0", "set"] }
+run = ["{python}", "tests/wait_driver.py", "{out}/wait{exe}", "500000", "0", "200"]
+claims = { line = ["0 of 200 first waits of a process took less than 500000 ns"] }
+false = { run = ["{python}", "tests/wait_driver.py", "{out}/wait{exe}", "500000", "0", "200", "set"] }
 
 [[case]]
 name = "a step of the wall clock does not change a wait"
-run = ["{out}/wait{exe}", "50000000", "3600"]
-claims = { line = ["the wait took at least 50000000 ns"] }
-false = { run = ["{out}/wait{exe}", "50000000", "3600", "set"] }
+run = ["{out}/wait{exe}", "50000000", "3600", "20"]
+claims = { line = ["0 of 20 waits took less than 50000000 ns"] }
+false = { run = ["{out}/wait{exe}", "50000000", "3600", "20", "set"] }
 
 [[case]]
 name = "a thread gets the stack that its start asks for"
@@ -42,36 +42,48 @@ false = { run = ["{out}/pins{exe}", "{case}", "65", "closed"] }
 
 [[case]]
 name = "an interrupt sets the flag, and the program ends its work"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt"]
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "caught", "stopped"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice", "a second signal ends it at once"] }
 
 [[case]]
 name = "a termination sets the flag, and the program ends its work"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination"]
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "caught", "stopped"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination twice"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination twice", "a second signal ends it at once"] }
 
 [[case]]
 name = "a hang-up sets the flag, and the program ends its work"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "hang-up"]
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "hang-up", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "caught", "stopped"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt, hang-up"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt, hang-up", "a second signal ends it at once"] }
+
+[[case]]
+name = "the first signal writes the line of the host at once, while the program hangs"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"]
+claims = { order = ["ready", "a second signal ends it at once", "caught"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "ignored only", "a second signal ends it at once"] }
 
 [[case]]
 name = "a second signal ends the program at once with status 1"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice"]
-claims = { status = 1, order = ["ready", "caught"], lacks = ["stopped"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt"] }
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice", "a second signal ends it at once"]
+claims = { status = 1, order = ["ready", "a second signal ends it at once"], lacks = ["caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"] }
+
+[[case]]
+name = "a second signal ends the program at once while its output is full"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "full output, twice", "a second signal ends it at once"]
+claims = { status = 1, order = ["ready", "stopped reading the output of the program"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "full output", "a second signal ends it at once"] }
 
 [[case]]
 name = "a signal that the parent ignores stays ignored"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "ignored, then caught"]
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "ignored, then caught", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "caught", "stopped"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "caught, then caught"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "caught, then caught", "a second signal ends it at once"] }
 
 [[case]]
 name = "a write to a closed output does not end the program"
-run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output"]
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "closed the output of the program"] }
-false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output, twice"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output, twice", "a second signal ends it at once"] }
