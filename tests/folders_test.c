@@ -70,17 +70,14 @@ static void remove_chain([[maybe_unused]] const char *base)
 static void lock([[maybe_unused]] const char *base, bool last, bool on)
 {
     PSECURITY_DESCRIPTOR sd = nullptr;
-    wchar_t keep = chain[ends[LEVELS]];
-    const wchar_t *list_denied = L"D:P(D;;0x1;;;WD)(A;OICI;FA;;;WD)";
+    const wchar_t *read_denied = L"D:P(D;;0x1;;;WD)(A;;FA;;;WD)";
 
     if (!last || !on)
         return;
-    chain[ends[LEVELS]] = L'\0';
-    if (ConvertStringSecurityDescriptorToSecurityDescriptorW(list_denied,
+    if (ConvertStringSecurityDescriptorToSecurityDescriptorW(read_denied,
         SDDL_REVISION_1, &sd, nullptr))
         SetFileSecurityW(chain, DACL_SECURITY_INFORMATION, sd);
     LocalFree(sd);
-    chain[ends[LEVELS]] = keep;
 }
 #else
 static void make_chain(const char *base)
