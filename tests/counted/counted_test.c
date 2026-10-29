@@ -57,7 +57,7 @@ static int drive_thread(void)
         os_thread_t *t;
 
         arm(at);
-        t = os_thread_start(noop, nullptr);
+        t = os_thread_start(noop, nullptr, 1 << 16);
         if (t) {
             os_thread_join(t);
             return (0);

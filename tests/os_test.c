@@ -9,6 +9,8 @@
 
 #include "os.h"
 
+constexpr size_t STACK = 1 << 20;
+
 static void set_flag(void *arg)
 {
     *(int *)arg = 7;
@@ -31,7 +33,7 @@ static int wait_for_thread(void)
 
     if (!e)
         return (printf("FAIL: event to wait for\n"), 1);
-    t = os_thread_start(set_later, e);
+    t = os_thread_start(set_later, e, STACK);
     if (!t)
         return (printf("FAIL: thread that sets\n"), 1);
     os_event_wait(e, OS_FOREVER);
@@ -91,12 +93,14 @@ int main(int argc, char **argv)
     if (wait_for_thread())
         return (1);
 
-    t = os_thread_start(set_flag, &flag);
+    t = os_thread_start(set_flag, &flag, 1);
     if (!t)
         return (printf("FAIL: thread\n"), 1);
     os_thread_join(t);
     if (flag != 7)
         return (printf("FAIL: thread work\n"), 1);
+    if (os_thread_start(set_flag, &flag, SIZE_MAX))
+        return (printf("FAIL: a stack larger than the address space\n"), 1);
     if (!os_get_thread_id())
         return (printf("FAIL: thread id\n"), 1);
     (void)os_get_now();
