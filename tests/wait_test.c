@@ -31,22 +31,35 @@ int clock_gettime(clockid_t clock, struct timespec *now)
 }
 #endif
 
+static unsigned count_short(os_event_t *e, uint64_t nanos, unsigned waits)
+{
+    unsigned short_waits = 0;
+    uint64_t spent;
+
+    for (unsigned i = 0; i < waits; i++) {
+        spent = os_get_now();
+        os_event_wait(e, nanos);
+        short_waits += os_get_now() - spent < nanos;
+    }
+    return (short_waits);
+}
+
 int main(int argc, char **argv)
 {
     os_event_t *e = os_event_create();
     uint64_t nanos;
-    uint64_t spent;
+    unsigned waits;
+    unsigned short_waits;
 
-    if (argc < 3 || argc > 4 || !e)
-        return (printf("usage: wait <nanoseconds> <seconds back> [set]\n"), 2);
+    if (argc < 4 || argc > 5 || !e)
+        return (printf("usage: wait <nanoseconds> <seconds back> <waits> [set]\n"), 2);
     nanos = strtoull(argv[1], nullptr, 10);
     step = strtoll(argv[2], nullptr, 10);
-    if (argc == 4)
+    waits = (unsigned)strtoul(argv[3], nullptr, 10);
+    if (argc == 5)
         os_event_set(e);
-    spent = os_get_now();
-    os_event_wait(e, nanos);
-    spent = os_get_now() - spent;
-    printf("the wait took %s %llu ns\n", spent < nanos ? "less than" : "at least",
+    short_waits = count_short(e, nanos, waits);
+    printf("%u of %u waits took less than %llu ns\n", short_waits, waits,
         (unsigned long long)nanos);
     os_event_free(e);
     return (0);

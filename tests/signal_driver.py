@@ -16,21 +16,24 @@ SCENARIOS = {
     'termination twice': {'posix': ['SIGTERM', 'SIGTERM'], 'windows': ['ctrl-break', 'ctrl-break']},
     'hang-up': {'posix': ['SIGHUP'], 'windows': ['close']},
     'interrupt, hang-up': {'posix': ['SIGINT', 'SIGHUP'], 'windows': ['ctrl-c', 'close']},
+    'ignored only': {'ignored': True, 'posix': ['SIGHUP'], 'windows': ['ctrl-c']},
     'ignored, then caught': {'ignored': True, 'posix': ['SIGHUP', 'SIGINT'], 'windows': ['ctrl-c', 'close']},
     'caught, then caught': {'posix': ['SIGHUP', 'SIGINT'], 'windows': ['ctrl-c', 'close']},
-    'closed output': {'closed': True, 'posix': ['SIGINT'], 'windows': ['ctrl-c']},
-    'closed output, twice': {'closed': True, 'posix': ['SIGINT', 'SIGINT'], 'windows': ['ctrl-c', 'ctrl-c']},
+    'closed output': {'output': 'closed', 'posix': ['SIGINT'], 'windows': ['ctrl-c']},
+    'closed output, twice': {'output': 'closed', 'posix': ['SIGINT', 'SIGINT'], 'windows': ['ctrl-c', 'ctrl-c']},
+    'full output': {'output': 'full', 'posix': ['SIGINT'], 'windows': ['ctrl-c']},
+    'full output, twice': {'output': 'full', 'posix': ['SIGINT', 'SIGINT'], 'windows': ['ctrl-c', 'ctrl-c']},
 }
 WAIT = 20
 PAUSE = 1
 
 
 class Posix:
-    def __init__(self, program, steps, ignored):
+    def __init__(self, command, steps, ignored):
         for name in ('SIGINT', 'SIGTERM', 'SIGHUP'):
             kept = signal.SIG_IGN if ignored and name == steps[0] else signal.SIG_DFL
             signal.signal(getattr(signal, name), kept)
-        self.child = subprocess.Popen([program], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        self.child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT)
         self.out, self.into = self.child.stdout, self.child.stdin
 
@@ -46,7 +49,7 @@ class Posix:
 
 
 class Windows:
-    def __init__(self, program, steps, ignored):
+    def __init__(self, command, steps, ignored):
         import msvcrt
         from ctypes import wintypes as w
         self.k = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -91,13 +94,13 @@ class Windows:
         self.info = Process()
         group = 0x200 if 'ctrl-break' in steps else 0
         self.k.SetConsoleCtrlHandler(None, ignored)
-        line = ctypes.create_unicode_buffer(subprocess.list2cmdline([program]))
+        line = ctypes.create_unicode_buffer(subprocess.list2cmdline(command))
         self.check(self.k.CreateProcessW(None, line, None, None, True, 0x80000 | group, None, None,
                                          ctypes.byref(start), ctypes.byref(self.info)), 'CreateProcessW')
         for handle in (tty_read, screen_write, in_read, out_write):
             self.k.CloseHandle(handle)
         screen = msvcrt.open_osfhandle(screen_read.value, 0)
-        threading.Thread(target=self.drain, args=(screen,), daemon=True).start()
+        threading.Thread(target=drain, args=(os.fdopen(screen, 'rb'),), daemon=True).start()
         self.tty = os.fdopen(msvcrt.open_osfhandle(tty_write.value, 0), 'wb', buffering=0)
         self.out = os.fdopen(msvcrt.open_osfhandle(out_read.value, 0), 'rb')
         self.into = os.fdopen(msvcrt.open_osfhandle(in_write.value, 0), 'wb')
@@ -110,10 +113,6 @@ class Windows:
     def check(self, done, what):
         if not done:
             sys.exit('%s failed: error %d' % (what, ctypes.get_last_error()))
-
-    def drain(self, screen):
-        while os.read(screen, 1 << 16):
-            pass
 
     def act(self, step):
         if step == 'ctrl-c':
@@ -141,41 +140,50 @@ class Windows:
         return None if late else code.value
 
 
-def relay(out, seen, closed):
+def drain(out):
+    while out.read(1 << 16):
+        pass
+
+
+def relay(out, seen, stop):
     for line in iter(out.readline, b''):
         said = line.decode('utf-8', 'replace').strip()
         print(said, flush=True)
         if said in seen:
             seen[said].set()
-        if said == 'ready' and closed:
+        if said == 'ready' and stop:
             return
 
 
 def main():
-    program, scenario = sys.argv[1], SCENARIOS[sys.argv[2]]
+    program, scenario, line = sys.argv[1], SCENARIOS[sys.argv[2]], sys.argv[3]
     steps = scenario['windows' if os.name == 'nt' else 'posix']
-    closed = scenario.get('closed', False)
-    child = (Windows if os.name == 'nt' else Posix)(program, steps, scenario.get('ignored', False))
-    seen = {'ready': threading.Event(), 'caught': threading.Event()}
-    reader = threading.Thread(target=relay, args=(child.out, seen, closed))
+    output = scenario.get('output', 'read')
+    command = [program, line] + (['fill'] if output == 'full' else [])
+    child = (Windows if os.name == 'nt' else Posix)(command, steps, scenario.get('ignored', False))
+    seen = {'ready': threading.Event(), line: threading.Event()}
+    reader = threading.Thread(target=relay, args=(child.out, seen, output != 'read'))
     reader.start()
-    if seen['ready'].wait(WAIT) and closed:
+    if seen['ready'].wait(WAIT) and output != 'read':
         reader.join()
-        child.out.close()
-        print('closed the output of the program', flush=True)
-    for number, step in enumerate(steps):
-        child.act(step)
-        if number + 1 < len(steps):
-            seen['caught'].wait(PAUSE)
-    if closed or len(steps) > 1:
+        if output == 'closed':
+            child.out.close()
+        print('%s the output of the program' % ('closed' if output == 'closed' else 'stopped reading'), flush=True)
         time.sleep(PAUSE)
-    else:
-        seen['caught'].wait(WAIT)
+    for step in steps:
+        before = seen[line].is_set()
+        child.act(step)
+        if before or output != 'read':
+            time.sleep(PAUSE)
+        else:
+            seen[line].wait(PAUSE)
     try:
-        child.into.write(b'\n')
+        child.into.write(b'\n\n')
         child.into.close()
     except OSError:
         pass
+    if output == 'full':
+        threading.Thread(target=drain, args=(child.out,), daemon=True).start()
     status = child.ended()
     reader.join(WAIT)
     if status is None:
