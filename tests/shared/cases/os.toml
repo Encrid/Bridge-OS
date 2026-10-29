@@ -102,3 +102,9 @@ name = "a write to a closed output does not end the program"
 run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output", "a second signal ends it at once"]
 claims = { status = 0, order = ["ready", "closed the output of the program"] }
 false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output, twice", "a second signal ends it at once"] }
+
+[[case]]
+name = "the zip of a release holds fail.toml"
+run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out", "--pack"]
+claims = { status = 0, order = ["{case}/out/bridge-os-{target}.zip", "fail.toml", "package proof: bridge-os ran"] }
+false = { run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out"] }

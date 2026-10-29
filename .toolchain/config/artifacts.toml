@@ -11,6 +11,11 @@ kind = "file"
 sources = [".toolchain/config/leaks.toml"]
 
 [[artifact]]
+name = "fail.toml"
+kind = "file"
+sources = [".toolchain/config/fail.toml"]
+
+[[artifact]]
 name = "fixture"
 kind = "library"
 test = true
