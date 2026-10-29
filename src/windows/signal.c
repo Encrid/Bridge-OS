@@ -3,8 +3,8 @@
 **
 ** Under the GNU Affero General Public License, version 3 only: see license.
 */
-#include <stdatomic.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "os_types.h"
 
@@ -12,37 +12,47 @@ constexpr DWORD ENDING[] = {
     CTRL_CLOSE_EVENT, CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT
 };
 
-static atomic_bool *get_caught(void)
+static struct os_stop *get_stop(void)
 {
-    static atomic_bool caught;
+    static struct os_stop stop;
 
-    return (&caught);
+    return (&stop);
 }
 
-static bool is_ending(DWORD event)
+static DWORD WINAPI write_line(LPVOID p)
 {
-    for (size_t i = 0; i < sizeof(ENDING) / sizeof(ENDING[0]); i++) {
-        if (ENDING[i] == event)
-            return (true);
-    }
-    return (false);
+    const struct os_stop *stop = p;
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD written;
+
+    WriteFile(output, stop->line, stop->length, &written, nullptr);
+    return (0);
 }
 
 static BOOL WINAPI catch_stop(DWORD event)
 {
-    if (atomic_exchange(get_caught(), true))
+    struct os_stop *stop = get_stop();
+
+    if (atomic_exchange(&stop->caught, true))
         _Exit(1);
-    if (is_ending(event))
-        Sleep(INFINITE);
+    CloseHandle(CreateThread(nullptr, 0, write_line, stop, 0, nullptr));
+    for (size_t i = 0; i < sizeof(ENDING) / sizeof(ENDING[0]); i++) {
+        if (ENDING[i] == event)
+            Sleep(INFINITE);
+    }
     return (TRUE);
 }
 
-int os_signal_catch(void)
+int os_signal_catch(const char *line)
 {
+    struct os_stop *stop = get_stop();
+
+    stop->line = line;
+    stop->length = (DWORD)strlen(line);
     return (!SetConsoleCtrlHandler(catch_stop, TRUE));
 }
 
 bool os_signal_is_caught(void)
 {
-    return (atomic_load(get_caught()));
+    return (atomic_load(&get_stop()->caught));
 }

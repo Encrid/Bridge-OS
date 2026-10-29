@@ -64,7 +64,7 @@ void os_event_wait(os_event_t *e, uint64_t nanos);
 
 [[nodiscard]] int os_lock(const char *path);
 
-[[nodiscard]] int os_signal_catch(void);
+[[nodiscard]] int os_signal_catch(const char *line);
 
 bool os_signal_is_caught(void);
 

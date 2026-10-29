@@ -7,6 +7,7 @@
     #define BRIDGE_OS_TYPES_H
 
     #include <pthread.h>
+    #include <stdatomic.h>
 
     #include "os.h"
 
@@ -24,6 +25,12 @@ struct os_event {
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int set;
+};
+
+struct os_stop {
+    atomic_bool caught;
+    _Atomic(const char *) line;
+    atomic_size_t length;
 };
 
 int os_cond_start(pthread_cond_t *cond);

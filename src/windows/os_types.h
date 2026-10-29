@@ -7,6 +7,7 @@
     #define BRIDGE_OS_TYPES_H
 
     #define WIN32_LEAN_AND_MEAN
+    #include <stdatomic.h>
     #include <windows.h>
 
     #include "os.h"
@@ -23,6 +24,12 @@ struct os_mutex {
 
 struct os_event {
     HANDLE handle;
+};
+
+struct os_stop {
+    atomic_bool caught;
+    const char *line;
+    DWORD length;
 };
 
 #endif
