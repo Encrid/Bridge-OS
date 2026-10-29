@@ -44,6 +44,39 @@ include = ["include"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
 
 [[artifact]]
+name = "wait"
+kind = "program"
+test = true
+sources = ["tests/wait_test.c", "src/{system}/*.c"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "stack"
+kind = "program"
+test = true
+sources = ["tests/stack_test.c", "src/{system}/*.c"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "pins"
+kind = "program"
+test = true
+sources = ["tests/pins_test.c", "src/{system}/*.c"]
+include = ["include"]
+defines = ["{paths}"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "signal"
+kind = "program"
+test = true
+sources = ["tests/signal_test.c", "src/{system}/*.c"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
 name = "counted_os"
 kind = "archive"
 test = true
