@@ -7,6 +7,8 @@
 
 #include "os_types.h"
 
+constexpr uint64_t MILLISECOND = 1'000'000;
+
 os_event_t *os_event_create(void)
 {
     os_event_t *e = malloc(sizeof(*e));
@@ -35,9 +37,7 @@ void os_event_set(os_event_t *e)
 
 void os_event_wait(os_event_t *e, uint64_t nanos)
 {
-    DWORD ms = INFINITE;
+    uint64_t ms = nanos / MILLISECOND + (nanos % MILLISECOND > 0);
 
-    if (nanos != OS_FOREVER)
-        ms = (DWORD)(nanos / 1'000'000);
-    WaitForSingleObject(e->handle, ms);
+    WaitForSingleObject(e->handle, ms < INFINITE ? (DWORD)ms : INFINITE);
 }
