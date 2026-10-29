@@ -15,6 +15,7 @@ from shared import die, expanded
 TOPS = ('src/', 'include/')
 OPENS = ('if', 'ifdef', 'ifndef')
 DIRECTIVE = re.compile(rb'[ \t]*#[ \t]*(\w+)')
+NULLABILITY = re.compile(r'\b_(?:Nonnull|Nullable_result|Nullable|Null_unspecified)\b')
 RENAME = '''[[maybe_unused]] static typeof(%(n)s) %(p)s%(n)s;
 #pragma push_macro("%(n)s")
 #undef %(n)s
@@ -158,12 +159,17 @@ def plain(kind):
     return kind.get('desugaredQualType', kind.get('qualType', ''))
 
 
+def spelled(text):
+    return ' '.join(NULLABILITY.sub('', text).split())
+
+
 def declaration(node, typedefs):
     whole = plain(node.get('type', {}))
     returned = whole.split('(', 1)[0].strip()
-    parameters = [plain(one.get('type', {})) for one in node.get('inner', [])
+    parameters = [one.get('type', {}) for one in node.get('inner', [])
                   if isinstance(one, dict) and one.get('kind') == 'ParmVarDecl']
-    return typedefs.get(returned, returned), parameters, '...' in whole
+    return (typedefs.get(returned, returned), [plain(one) for one in parameters], '...' in whole,
+            [spelled(one.get('qualType', '')) for one in parameters])
 
 
 def found(root, path, tree, names, callbacks=()):
@@ -177,7 +183,7 @@ def found(root, path, tree, names, callbacks=()):
                 used.add(name)
         elif kind == 'TypedefDecl':
             typedefs.setdefault(name, plain(node.get('type', {})))
-        elif kind == 'FunctionDecl' and name in names:
+        elif kind == 'FunctionDecl' and name in names and not node.get('isImplicit'):
             declared.setdefault(name, declaration(node, typedefs))
             body = any(isinstance(one, dict) and one.get('kind') == 'CompoundStmt' for one in node.get('inner', []))
             if body and owned(node.get('loc', {}), root) == path:
@@ -217,12 +223,13 @@ def included(text):
 
 
 def signed(name, declaration, prefix):
-    returned, parameters, variadic = declaration
+    _, _, variadic, parameters = declaration
     if variadic:
         die('%s takes a list of arguments of no fixed length' % name)
     arguments = ', '.join('typeof(%s) a%d' % (one, n) for n, one in enumerate(parameters)) or 'void'
     call = '%s(%s)' % (name, ', '.join('a%d' % n for n in range(len(parameters))))
-    return 'static typeof(%s) %s%s(%s)\n{\n' % (returned, prefix, name, arguments), call
+    result = '%s(%s)' % (name, ', '.join('(%s){}' % one for one in parameters))
+    return 'static typeof(%s) %s%s(%s)\n{\n' % (result, prefix, name, arguments), call
 
 
 def placing(text, at):
