@@ -11,6 +11,10 @@ It puts `\\?\UNC` in place of the first backslash of a network path, `\\server\s
 A path that starts with `\\?\` or `\\.\` keeps its form, and moves to the start of the buffer.
 With the form `\\?\`, Windows gives the path to the file system with no change, so the path can be long.
 
+Then `os_mark_whole` drops one last backslash, so that a joined name follows one backslash. Windows does not fold two of them in that form.
+Thus `C:\mods\` gives `\\?\C:\mods`, and the root `C:\` gives `\\?\C:`.
+`GetFullPathNameW` keeps one last backslash of a path, and folds a run of them into one. So one backslash at most is left to drop.
+
 ## The test
 
 The file uses only the C of the standard. Thus the program of `tests/whole_test.c` compiles it on each system, and the cases check each form.
