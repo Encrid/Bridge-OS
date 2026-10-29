@@ -1,7 +1,7 @@
 # src/posix/os_types.h
 
-This header gives the thread, the mutex, the event and the signal state of `include/os.h` on Linux and macOS.
-It includes `<pthread.h>`, `<stdatomic.h>` and `include/os.h`, and the other files of `src/posix` include it.
+This header gives the thread, the mutex, the event, the open folder and the signal state of `include/os.h` on Linux and macOS.
+It includes `<dirent.h>`, `<pthread.h>`, `<stdatomic.h>` and `include/os.h`, and the other files of `src/posix` include it.
 
 ## Types
 
@@ -33,6 +33,15 @@ An event: a flag, the mutex that guards the flag, and a condition for a wait.
 | `cond` | The `pthread_cond_t` that a wait sleeps on. |
 | `set` | 1 while the event is set, and 0 when it is not. |
 
+### struct os_folder
+
+An open folder, which `os_folder_open` makes and `os_folder_close` frees.
+
+| Field | Content |
+| --- | --- |
+| `dir` | The `DIR` stream of the folder. Its descriptor opens the files of the folder. |
+| `bytes` | The buffer of the last file that the folder read, or `nullptr`. |
+
 ### struct os_stop
 
 The state of the signals: `docs/intern/posix/signal.c.md`, *The state*.
@@ -47,8 +56,10 @@ The state of the signals: `docs/intern/posix/signal.c.md`, *The state*.
 
 The header declares the two functions of a condition that `src/posix/event.c` calls.
 `src/linux/event_clock.c` defines them for Linux, and `src/macos/event_clock.c` for macOS.
+It also declares `os_open_search` for the walk of a long path. A file of `src/linux` and a file of `src/macos` define it.
 
 | Function | Result |
 | --- | --- |
 | `os_cond_start(cond)` | Starts the condition of an event. Gives 0 on success. |
 | `os_cond_wait(e, nanos)` | Waits on the condition of `e` until its flag is set or `nanos` nanoseconds pass. The caller holds the mutex of `e`. |
+| `os_open_search(at, name)` | Opens the folder `name` of the folder `at` for search only, and gives its descriptor, or -1. |
