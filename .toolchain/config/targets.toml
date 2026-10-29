@@ -4,12 +4,12 @@ system_libraries = []
 system_sources = []
 
 [targets.x86_64-linux-gnu]
-system_defines = []
+system_defines = ["-D_GNU_SOURCE"]
 system_libraries = ["-lm", "-lpthread", "-ldl"]
 system_sources = ["src/linux/*.c"]
 
 [targets.aarch64-linux-gnu]
-system_defines = []
+system_defines = ["-D_GNU_SOURCE"]
 system_libraries = ["-lm", "-lpthread", "-ldl"]
 system_sources = ["src/linux/*.c"]
 
