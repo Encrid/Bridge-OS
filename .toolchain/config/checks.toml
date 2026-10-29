@@ -29,19 +29,3 @@ col = 9
 side = "false"
 system = "posix"
 why = "os_folder_make's mkdir fails only when the folder already exists, and then stat finds it, so the not-found branch is not reached."
-
-[[branches.exception]]
-path = "src/posix/library.c"
-line = 48
-col = 34
-side = "true"
-system = "posix"
-why = "The table of pins fills only after 64 libraries are pinned, and no case opens that many libraries."
-
-[[branches.exception]]
-path = "src/posix/library.c"
-line = 54
-col = 13
-side = "false"
-system = "posix"
-why = "A pin fails after its dlopen only when the table of pins is full, and no case opens 64 libraries."
