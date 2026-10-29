@@ -26,6 +26,17 @@ struct os_event {
     HANDLE handle;
 };
 
+constexpr size_t OS_NAME_ROOM = 256;
+
+struct os_folder {
+    HANDLE find;
+    WIN32_FIND_DATAW data;
+    bool pending;
+    wchar_t *whole;
+    char *bytes;
+    char name[3 * OS_NAME_ROOM];
+};
+
 struct os_stop {
     atomic_bool caught;
     const char *line;
