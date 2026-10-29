@@ -74,18 +74,25 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_event_create` | Makes an event that one thread sets and another waits for. A set before the wait is not lost, and a wait consumes it. Gives `nullptr` on failure. |
 | `os_event_free` | Frees an event that no thread waits for. A null `e` does nothing. |
 | `os_event_set` | Sets an event: one wait, now or later, returns for it. |
-| `os_event_wait` | Waits until the event is set or `nanos` nanoseconds pass, and consumes a set. A monotonic clock measures the nanoseconds, so a step of the wall clock does not change a wait. On Windows, the wait rounds `nanos` up to whole milliseconds. With `OS_FOREVER` it has no time limit. The core waits with `OS_FOREVER`; a backend watchdog waits with a deadline. |
+| `os_event_wait` | Waits until the event is set or `nanos` nanoseconds pass, and consumes a set. The clock of `os_get_now` measures the nanoseconds, so a step of the wall clock does not change a wait. On Windows, the wait rounds `nanos` up to whole milliseconds. With `OS_FOREVER` it has no time limit. The core waits with `OS_FOREVER`; a backend watchdog waits with a deadline. |
 | `os_folder_set` | Moves the process into `folder`, so the host runs from the folder of the deployment. Gives 0 on success. |
 | `os_folder_make` | Makes `folder` when it is not there. Gives 0 on success. |
 | `os_path_whole` | Gives the absolute path of `path`, which the caller frees, or `nullptr`. |
 | `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. It does not wait: it gives 0 on success, 1 if a lock holds the file already, and -1 if the file does not open. The mode is fixed, because the host needs only this mode, and the layer has one implementation of it. |
-| `os_signal_catch` | Catches the signals that stop the process, as *The signals* tells. Gives 0 on success. |
+| `os_signal_catch` | Catches the signals that stop the process, and writes `line` at the first signal, as *The signals* tells. Gives 0 on success. |
 | `os_signal_is_caught` | Tells if a signal set the flag of `os_signal_catch`. The host reads it between two passes, and then ends its work. |
 
 ## The signals
 
 After `os_signal_catch`, an interrupt, a termination or a hang-up sets a flag, and the process goes on.
-A second signal ends the process at once, with status 1.
+A second signal ends the process at once, with status 1, also while the output is full.
+
+At the first signal, the layer writes `line` to the standard output at once, also while a pass of the host hangs.
+`line` holds its own line end, and stays valid until the end of the process, for example as a literal.
+The layer writes it with one call of the system, past the buffer of `stdio`.
+So a host that keeps its lines in a buffer must flush each line as it writes it, for example with `fflush`.
+Else the line of the signal can come before older lines. On Windows, `_IOLBF` gives a full buffer, so a line buffer does not do it.
+
 On Linux and macOS, these signals are `SIGINT`, `SIGTERM` and `SIGHUP`.
 A signal that the parent made the process ignore stays ignored, for example `SIGHUP` under `nohup`.
 The process also ignores `SIGPIPE`. Thus a write to a closed output fails, and does not end the process.
