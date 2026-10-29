@@ -74,7 +74,7 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_lib_get_symbol` | Gives where a library has what it exports as `name`, or `nullptr`. |
 | `os_lib_close` | Closes a library. Each caller passes a library that `os_lib_open` gave. |
 | `os_lib_pin` | Keeps the open library of `path` in the process until its end. A later `os_lib_close` closes the handle, and the library stays. A second pin of a library changes nothing. A process can pin any number of libraries. Gives 0, or -1 if no library of `path` is open. |
-| `os_thread_start` | Starts a thread that runs `fn(arg)` on a stack of at least `stack` bytes. The system can give more, because it rounds the size up to its unit and to its least stack. It also keeps a small part of the stack for itself. Gives `nullptr` on failure, for example for a stack that does not fit in the address space. |
+| `os_thread_start` | Starts a thread that runs `fn(arg)` on a stack of at least `stack` bytes. The system can give more, because it rounds the size up to its unit and to its least stack. On Linux, glibc can also give the larger stack of a thread that ended. It also keeps a small part of the stack for itself. Gives `nullptr` on failure, for example for a stack that does not fit in the address space. |
 | `os_thread_join` | Waits for a thread to end, and frees what `os_thread_start` gave. |
 | `os_thread_stack_left` | Gives the bytes of stack that the calling thread can still use below the call, as *The stack of a thread* tells. Gives 0 if the system does not tell the stack of the thread. |
 | `os_get_thread_id` | Gives a number for the calling thread that no other live thread has. It is never 0. |
