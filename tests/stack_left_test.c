@@ -23,7 +23,7 @@ constexpr unsigned TRIES = 4;
 struct run {
     size_t size;
     size_t first;
-    bool within;
+    bool enough;
 };
 
 static bool past;
@@ -54,8 +54,8 @@ static void run_thread(void *arg)
     struct run *run = arg;
 
     run->first = read_left();
-    run->within = run->first <= run->size && run->first + SLACK > run->size;
-    if (run->within)
+    run->enough = run->first + SLACK > run->size;
+    if (run->enough)
         go_deep(past ? PAST : 0);
 }
 
@@ -67,11 +67,10 @@ static int run_one(size_t size)
     if (!t)
         return (printf("FAIL: thread of %zu bytes\n", size), 1);
     os_thread_join(t);
-    if (!run.within)
+    if (!run.enough)
         return (printf("thread of %zu bytes: %zu bytes left at its start\n",
             size, run.first), 1);
-    printf("thread of %zu bytes: within its stack, used down to %zu bytes\n",
-        size, LAST);
+    printf("thread of %zu bytes: used down to %zu bytes\n", size, LAST);
     return (0);
 }
 

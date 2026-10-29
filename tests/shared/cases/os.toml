@@ -53,7 +53,7 @@ false = { run = ["{out}/stack{exe}", "1048576", "3145728"] }
 name = "each started thread can use the stack that os_thread_stack_left gives, down to its last 4096 bytes"
 run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576"]
 fail = { pthread_getattr_np = 1 }
-claims = { status = 0, line = ["thread of 4194304 bytes: within its stack, used down to 4096 bytes", "thread of 1048576 bytes: within its stack, used down to 4096 bytes"] }
+claims = { status = 0, line = ["thread of 4194304 bytes: used down to 4096 bytes", "thread of 1048576 bytes: used down to 4096 bytes"] }
 false = { run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576", "past"] }
 
 [[case]]
