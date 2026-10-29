@@ -1,7 +1,7 @@
 # src/windows/os_types.h
 
-This header gives `include/os.h` its thread, its mutex and its event on Windows.
-It defines `WIN32_LEAN_AND_MEAN`, includes `<windows.h>` and `include/os.h`, and the other files of `src/windows` include it.
+This header gives `include/os.h` its thread, its mutex, its event and the state of its signals on Windows.
+It defines `WIN32_LEAN_AND_MEAN`, and includes `<stdatomic.h>`, `<windows.h>` and `include/os.h`. Each other file of `src/windows` includes this header.
 
 ## Types
 
@@ -30,6 +30,16 @@ An event: an event object of Windows, which resets itself as a wait returns for 
 | Field | Content |
 | --- | --- |
 | `handle` | The `HANDLE` of the event object. |
+
+### struct os_stop
+
+The state of the signals: `docs/intern/windows/signal.c.md`, *The state*.
+
+| Field | Content |
+| --- | --- |
+| `caught` | True after the first event. |
+| `line` | The line that a thread writes at the first event. |
+| `length` | The number of bytes of `line`. |
 
 ## Functions
 

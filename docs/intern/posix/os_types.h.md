@@ -1,7 +1,7 @@
 # src/posix/os_types.h
 
-This header gives the thread, the mutex and the event of `include/os.h` where there are POSIX threads: on Linux and macOS.
-It includes `<pthread.h>` and `include/os.h`, and the other files of `src/posix` include it.
+This header gives the thread, the mutex, the event and the signal state of `include/os.h` on Linux and macOS.
+It includes `<pthread.h>`, `<stdatomic.h>` and `include/os.h`, and the other files of `src/posix` include it.
 
 ## Types
 
@@ -32,6 +32,16 @@ An event: a flag, the mutex that guards the flag, and a condition for a wait.
 | `lock` | The `pthread_mutex_t` that guards `set`. |
 | `cond` | The `pthread_cond_t` that a wait sleeps on. |
 | `set` | 1 while the event is set, and 0 when it is not. |
+
+### struct os_stop
+
+The state of the signals: `docs/intern/posix/signal.c.md`, *The state*.
+
+| Field | Content |
+| --- | --- |
+| `caught` | True after the first signal. |
+| `line` | The line that the handler writes at the first signal. |
+| `length` | The number of bytes of `line`. |
 
 ## Functions
 
