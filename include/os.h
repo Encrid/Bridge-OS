@@ -37,6 +37,8 @@ void os_lib_close(void *lib);
 
 void os_thread_join(os_thread_t *t);
 
+[[nodiscard]] size_t os_thread_stack_left(void);
+
 uint64_t os_get_thread_id(void);
 
 uint64_t os_get_now(void);
