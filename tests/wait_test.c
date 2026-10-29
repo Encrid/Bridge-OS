@@ -4,7 +4,6 @@
 ** Under the GNU Affero General Public License, version 3 only: see license.
 */
 #ifndef _WIN32
-    #define _GNU_SOURCE
     #include <dlfcn.h>
     #include <time.h>
 #endif
