@@ -1,7 +1,7 @@
 # include/os.h
 
 This header gives the operating system as Bridge, its backends and its host need it.
-That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, paths and locks.
+That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, paths, locks and signals.
 
 ## The layer
 
@@ -17,7 +17,9 @@ The linker takes only the functions that the binary calls, so none imports a fun
 
 `include/os.h` declares each function once.
 `src/posix` holds the functions for Linux and macOS, and `src/windows` holds the same functions for Windows.
+`src/linux` and `src/macos` hold the parts of `src/posix` where Linux and macOS differ.
 The build compiles `src/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
+It also compiles the files of `system_sources`, the key of the target in `.toolchain/config/targets.toml`.
 So no file of the layer asks which platform it is compiled for.
 
 ## Constants
@@ -60,8 +62,8 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_lib_open` | Opens a shared library, or gives `nullptr`. For a path, the loader looks there for the library and for what it needs, since a backend brings its runtime beside itself. For a bare name, the loader uses the search of the operating system. |
 | `os_lib_get_symbol` | Gives where a library has what it exports as `name`, or `nullptr`. |
 | `os_lib_close` | Closes a library. Each caller passes a library that `os_lib_open` gave. |
-| `os_lib_pin` | Keeps the open library of `path` in the process until its end. A later `os_lib_close` closes the handle, and the library stays. A second pin of a library changes nothing. Gives 0, or -1 if no library of `path` is open. On Linux and macOS, a process can pin at most 64 libraries. |
-| `os_thread_start` | Starts a thread that runs `fn(arg)`. Gives `nullptr` on failure. |
+| `os_lib_pin` | Keeps the open library of `path` in the process until its end. A later `os_lib_close` closes the handle, and the library stays. A second pin of a library changes nothing. A process can pin any number of libraries. Gives 0, or -1 if no library of `path` is open. |
+| `os_thread_start` | Starts a thread that runs `fn(arg)` on a stack of at least `stack` bytes. The system can give more, because it rounds the size up to its unit and to its least stack. It also keeps a small part of the stack for itself. Gives `nullptr` on failure, for example for a stack that does not fit in the address space. |
 | `os_thread_join` | Waits for a thread to end, and frees what `os_thread_start` gave. |
 | `os_get_thread_id` | Gives a number for the calling thread that no other live thread has. It is never 0. |
 | `os_get_now` | Gives nanoseconds from a clock that only rises. On each target, its step is below a microsecond. |
@@ -72,8 +74,23 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_event_create` | Makes an event that one thread sets and another waits for. A set before the wait is not lost, and a wait consumes it. Gives `nullptr` on failure. |
 | `os_event_free` | Frees an event that no thread waits for. A null `e` does nothing. |
 | `os_event_set` | Sets an event: one wait, now or later, returns for it. |
-| `os_event_wait` | Waits until the event is set or `nanos` nanoseconds pass, and consumes a set. With `OS_FOREVER` it has no time limit. The core waits with `OS_FOREVER`; a backend watchdog waits with a deadline. |
+| `os_event_wait` | Waits until the event is set or `nanos` nanoseconds pass, and consumes a set. A monotonic clock measures the nanoseconds, so a step of the wall clock does not change a wait. On Windows, the wait rounds `nanos` up to whole milliseconds. With `OS_FOREVER` it has no time limit. The core waits with `OS_FOREVER`; a backend watchdog waits with a deadline. |
 | `os_folder_set` | Moves the process into `folder`, so the host runs from the folder of the deployment. Gives 0 on success. |
 | `os_folder_make` | Makes `folder` when it is not there. Gives 0 on success. |
 | `os_path_whole` | Gives the absolute path of `path`, which the caller frees, or `nullptr`. |
-| `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. Gives 0 on success. |
+| `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. It does not wait: it gives 0 on success, 1 if a lock holds the file already, and -1 if the file does not open. The mode is fixed, because the host needs only this mode, and the layer has one implementation of it. |
+| `os_signal_catch` | Catches the signals that stop the process, as *The signals* tells. Gives 0 on success. |
+| `os_signal_is_caught` | Tells if a signal set the flag of `os_signal_catch`. The host reads it between two passes, and then ends its work. |
+
+## The signals
+
+After `os_signal_catch`, an interrupt, a termination or a hang-up sets a flag, and the process goes on.
+A second signal ends the process at once, with status 1.
+On Linux and macOS, these signals are `SIGINT`, `SIGTERM` and `SIGHUP`.
+A signal that the parent made the process ignore stays ignored, for example `SIGHUP` under `nohup`.
+The process also ignores `SIGPIPE`. Thus a write to a closed output fails, and does not end the process.
+
+On Windows, the signals are the console events: Ctrl-C, Ctrl-Break, the close of the console, a logoff and a shutdown.
+A parent can make a process ignore only Ctrl-C, and then Ctrl-C stays ignored.
+After a close, a logoff or a shutdown, Windows ends the process some seconds later in any case.
+Windows has no `SIGPIPE`: a write to a closed output fails.
