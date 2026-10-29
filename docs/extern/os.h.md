@@ -16,7 +16,7 @@ A project names the file in `[leaks] with`, so that `test --leaks` counts the re
 The linker takes only the functions that the binary calls, so none imports a function it does not use.
 
 `fail.toml` names each function of the layer that can fail: each function that is `[[nodiscard]]`.
-With each name, it gives the value of a failed call: `nullptr` for a pointer, and -1 for a number.
+With each name, it gives the value of a failed call: `nullptr` for a pointer, -1 for a status, and 0 for bytes.
 A project names the file in `[fail] with`, so that a case of the project can make a call of the layer fail.
 
 `include/os.h` declares each function once.
@@ -76,6 +76,7 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_lib_pin` | Keeps the open library of `path` in the process until its end. A later `os_lib_close` closes the handle, and the library stays. A second pin of a library changes nothing. A process can pin any number of libraries. Gives 0, or -1 if no library of `path` is open. |
 | `os_thread_start` | Starts a thread that runs `fn(arg)` on a stack of at least `stack` bytes. The system can give more, because it rounds the size up to its unit and to its least stack. It also keeps a small part of the stack for itself. Gives `nullptr` on failure, for example for a stack that does not fit in the address space. |
 | `os_thread_join` | Waits for a thread to end, and frees what `os_thread_start` gave. |
+| `os_thread_stack_left` | Gives the bytes of stack that the calling thread can still use below the call, as *The stack of a thread* tells. Gives 0 if the system does not tell the stack of the thread. |
 | `os_get_thread_id` | Gives a number for the calling thread that no other live thread has. It is never 0. |
 | `os_get_now` | Gives nanoseconds from a clock that only rises. On each target, its step is below a microsecond. |
 | `os_mutex_create` | Makes a mutex. Gives `nullptr` on failure. |
@@ -96,6 +97,19 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. It does not wait: it gives 0 on success, 1 if a lock holds the file already, and -1 if the file does not open. The mode is fixed, because the host needs only this mode, and the layer has one implementation of it. |
 | `os_signal_catch` | Catches the signals that stop the process, and writes `line` at the first signal, as *The signals* tells. Gives 0 on success. |
 | `os_signal_is_caught` | Tells if a signal set the flag of `os_signal_catch`. The host reads it between two passes, and then ends its work. |
+
+## The stack of a thread
+
+`os_thread_stack_left` counts from its own frame down to the last byte of the stack that the thread can use.
+Thus a caller can refuse a call that needs more stack, for example a call of a wasm module, before the call ends the process.
+The caller keeps room for the frames that run between its check and that call.
+The count is for the stack that the system gave the thread, on the first thread of the process and on each other thread.
+
+- On Linux, the first call of a thread asks glibc with `pthread_getattr_np`, which makes system calls. The thread keeps the end of its stack, so each later call reads only that end.
+- If `pthread_getattr_np` fails, the call gives 0, and the next call of the thread asks again.
+- On macOS, each call reads the stack of the thread with `pthread_get_stackaddr_np` and `pthread_get_stacksize_np`, with no system call.
+- On Windows, each call reads the limits of the stack and the stack guarantee of the thread, with no system call.
+- On Windows, a call that reaches the lowest 16 KiB of the stack ends the process. With a stack guarantee of more than 8 KiB, that part is the guarantee and 8 KiB. The count leaves out that part.
 
 ## The folders
 
