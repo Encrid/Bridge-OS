@@ -5,10 +5,25 @@ claims = { matches = ["os ok"] }
 false = { run = ["{out}/os{exe}", "{case}", "fail"] }
 
 [[case]]
-name = "the os layer refuses when a resource runs out"
-run = ["{out}/counted{exe}"]
-claims = { matches = ["counted ok"] }
-false = { run = ["{out}/counted{exe}", "fail"] }
+name = "an event is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "event"]
+fail = { malloc = 1, pthread_mutex_init = 1, pthread_cond_init = 1, CreateEventA = 1 }
+claims = { matches = ["event: [1-9] refused, then made"] }
+false = { fail = {} }
+
+[[case]]
+name = "a mutex is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "mutex"]
+fail = { malloc = 1, pthread_mutex_init = 1 }
+claims = { matches = ["mutex: [1-9] refused, then made"] }
+false = { fail = {} }
+
+[[case]]
+name = "a thread is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "thread"]
+fail = { malloc = 1, pthread_create = 1 }
+claims = { matches = ["thread: [1-9] refused, then made"] }
+false = { fail = {} }
 
 [[case]]
 name = "the clock of the os layer moves in steps below a microsecond"
