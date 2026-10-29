@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
 
 #include "os.h"
 
@@ -41,6 +45,31 @@ static int wait_for_thread(void)
     os_event_free(e);
     return (0);
 }
+
+#ifdef _WIN32
+static void guarantee_more(void *arg)
+{
+    size_t *fall = arg;
+    size_t before = os_thread_stack_left();
+    ULONG more = 65536;
+
+    SetThreadStackGuarantee(&more);
+    *fall = before - os_thread_stack_left();
+}
+
+static int check_guarantee(void)
+{
+    size_t fall = 0;
+    os_thread_t *t = os_thread_start(guarantee_more, &fall, STACK);
+
+    if (!t)
+        return (printf("FAIL: thread of the guarantee\n"), 1);
+    os_thread_join(t);
+    if (fall != 65536 - 8192)
+        return (printf("FAIL: count the stack guarantee\n"), 1);
+    return (0);
+}
+#endif
 
 static int list_folder(os_folder_t *f)
 {
@@ -204,6 +233,10 @@ int main(int argc, char **argv)
         return (printf("FAIL: thread work\n"), 1);
     if (os_thread_start(set_flag, &flag, SIZE_MAX))
         return (printf("FAIL: a stack larger than the address space\n"), 1);
+#ifdef _WIN32
+    if (check_guarantee())
+        return (1);
+#endif
     if (!os_get_thread_id())
         return (printf("FAIL: thread id\n"), 1);
     (void)os_get_now();
