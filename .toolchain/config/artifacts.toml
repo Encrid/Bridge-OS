@@ -77,20 +77,9 @@ include = ["include"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
 
 [[artifact]]
-name = "counted_os"
-kind = "archive"
-test = true
-sources = ["src/{system}/*.c", "{system_sources}"]
-include = ["include"]
-defines = ["malloc=counted_malloc", "calloc=counted_calloc", "realloc=counted_realloc", "free=counted_free", "{counted_system}"]
-flags = ["{quiet}", "{system_defines}"]
-
-[[artifact]]
-name = "counted"
+name = "refuse"
 kind = "program"
 test = true
-sources = ["tests/counted/*.c"]
-include = ["include", "tests/counted"]
-defines = ["COUNTED"]
-link = ["{out}/counted_os.a"]
+sources = ["tests/refuse_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]

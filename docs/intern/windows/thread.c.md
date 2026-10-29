@@ -20,6 +20,10 @@ For a `stack` of 0, Windows reserves the size that the program states. That also
 
 `os_thread_start` frees the record and gives `nullptr` if `CreateThread` fails.
 
+No case makes `CreateThread` fail with the failed calls of the template yet, so `.toolchain/config/system_fail.toml` does not list it.
+The tool writes the type of its third parameter as `DWORD (*)(LPVOID) __attribute__((stdcall))`, and clang does not read that type.
+The case of a stack of `SIZE_MAX` bytes reaches the branch of a failed `CreateThread` instead, because Windows refuses that stack.
+
 ## Functions
 
 | Function | Result |
