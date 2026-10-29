@@ -37,7 +37,18 @@ void os_event_set(os_event_t *e)
 
 void os_event_wait(os_event_t *e, uint64_t nanos)
 {
-    uint64_t ms = nanos / MILLISECOND + (nanos % MILLISECOND > 0);
+    uint64_t start = os_get_now();
+    uint64_t gone = 0;
+    uint64_t rest;
+    uint64_t ms;
+    DWORD wait;
 
-    WaitForSingleObject(e->handle, ms < INFINITE ? (DWORD)ms : INFINITE);
+    while (gone <= nanos) {
+        rest = nanos - gone;
+        ms = rest / MILLISECOND + (rest % MILLISECOND > 0);
+        wait = ms < INFINITE ? (DWORD)ms : INFINITE;
+        if (WaitForSingleObject(e->handle, wait) == WAIT_OBJECT_0)
+            return;
+        gone = os_get_now() - start;
+    }
 }
