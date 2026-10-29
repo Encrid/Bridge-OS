@@ -21,14 +21,14 @@ int os_cond_start(pthread_cond_t *cond)
 
 void os_cond_wait(os_event_t *e, uint64_t nanos)
 {
+    uint64_t start = os_get_now();
     struct timespec end;
     uint64_t rest;
-    int late = 0;
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     rest = (uint64_t)end.tv_nsec + nanos % OS_SECOND;
     end.tv_sec += (time_t)(nanos / OS_SECOND + rest / OS_SECOND);
     end.tv_nsec = (long)(rest % OS_SECOND);
-    while (!e->set && !late)
-        late = pthread_cond_timedwait(&e->cond, &e->lock, &end);
+    while (!e->set && os_get_now() - start < nanos)
+        pthread_cond_timedwait(&e->cond, &e->lock, &end);
 }
