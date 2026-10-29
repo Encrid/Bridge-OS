@@ -9,6 +9,7 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The folders*.
 If `opendir` fails with `ENAMETOOLONG`, `open_path` opens the folder one name at a time, and `fdopendir` makes its stream.
 `open_path` starts at `/` for a path that starts with `/`, else at the current folder.
 It cuts a copy of the path at each `/` with `strtok_r`, and `step` opens each name from the folder before it.
+`strtok_r` gives no empty name, so a path that ends with `/`, or that holds `//`, gives `step` no empty name.
 
 `step` opens a folder before the last with `os_open_search`, for search only, and the last folder with `O_RDONLY`.
 Thus the walk needs the same rights as `opendir` of a short path. It needs the right to search each folder before the last, and the right to read the last.
