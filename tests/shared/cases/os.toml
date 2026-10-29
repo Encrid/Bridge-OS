@@ -177,3 +177,27 @@ name = 'a whole drive path, which GetFullPathNameW makes of a relative path, get
 run = ["{out}/whole{exe}", 'C:\dir\x']
 claims = { line = ['\\?\C:\dir\x'] }
 false = { run = ["{out}/whole{exe}", '\\dir\x'] }
+
+[[case]]
+name = 'a whole path that ends with a separator loses one separator'
+run = ["{out}/whole{exe}", 'C:\mods\']
+claims = { line = ['\\?\C:\mods'] }
+false = { run = ["{out}/whole{exe}", 'C:\mods\\'] }
+
+[[case]]
+name = 'the whole root of a drive loses its separator'
+run = ["{out}/whole{exe}", 'C:\']
+claims = { line = ['\\?\C:'] }
+false = { run = ["{out}/whole{exe}", 'C:\\'] }
+
+[[case]]
+name = "a folder path that ends with a separator opens, lists and reads, also past the path limit"
+run = ["{out}/folders{exe}", "{case}", "slash"]
+claims = { line = ["slash: listed, and read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "slash file"] }
+
+[[case]]
+name = "the root of the drive of a folder, or /, opens and lists"
+run = ["{out}/folders{exe}", "{case}", "root"]
+claims = { line = ["root: listed"] }
+false = { run = ["{out}/folders{exe}", "{case}", "root missing"] }

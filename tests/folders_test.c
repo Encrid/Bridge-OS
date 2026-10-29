@@ -208,6 +208,65 @@ static int read_locked(const char *base, const char *whole, bool last)
     return (!read);
 }
 
+static bool lists_folder(const char *path, const char *want)
+{
+    os_folder_t *f = os_folder_open(path);
+    bool is_folder = false;
+    const char *name = f ? os_folder_read_entry(f, &is_folder) : nullptr;
+    bool found = false;
+
+    while (name && !found) {
+        found = !want || (!strcmp(name, want) && is_folder);
+        name = os_folder_read_entry(f, &is_folder);
+    }
+    os_folder_close(f);
+    return (found);
+}
+
+static int read_slash(const char *base, const char *whole, bool as_file)
+{
+    size_t size = strlen(whole) + sizeof(file) + 3;
+    char *top = malloc(strlen(base) + 2);
+    char *deep = malloc(size);
+    char text[32] = "";
+    int refused = 0;
+    bool listed = false;
+    bool read = false;
+
+    if (top && deep) {
+        sprintf(top, "%s/", base);
+        if (as_file)
+            snprintf(deep, size, "%s/%s/", whole, file);
+        else
+            snprintf(deep, size, "%s/", whole);
+        listed = lists_folder(top, level);
+        read = read_deep(deep, &refused, text);
+    }
+    if (listed && read)
+        printf("slash: listed, and read %s\n", text);
+    free(top);
+    free(deep);
+    return (!(listed && read));
+}
+
+static int read_root(const char *base, bool missing)
+{
+    char root[4] = "/";
+    char *path = malloc(strlen(base) + sizeof("/missing/"));
+    bool listed = false;
+
+    if (base[0] && base[1] == ':')
+        snprintf(root, sizeof(root), "%c:/", base[0]);
+    if (path) {
+        sprintf(path, "%s/missing/", base);
+        listed = lists_folder(missing ? path : root, nullptr);
+    }
+    if (listed)
+        printf("root: listed\n");
+    free(path);
+    return (!listed);
+}
+
 static int run_mode(const char *mode, const char *base, const char *whole,
     const char *relative)
 {
@@ -223,11 +282,26 @@ static int run_mode(const char *mode, const char *base, const char *whole,
     }
     if (!strcmp(mode, "middle") || !strcmp(mode, "last"))
         return (read_locked(base, whole, !strcmp(mode, "last")));
+    if (!strcmp(mode, "slash") || !strcmp(mode, "slash file"))
+        return (read_slash(base, whole, !strcmp(mode, "slash file")));
+    if (!strcmp(mode, "root") || !strcmp(mode, "root missing"))
+        return (read_root(base, !strcmp(mode, "root missing")));
     if (!read_deep(whole, &refused, text) || os_folder_set(base)
         || !read_deep(relative, &refused, text))
         return (1);
     printf("deep: %d refused, read %s\n", refused, text);
     return (0);
+}
+
+static bool known(const char *mode)
+{
+    const char *modes[] = {"deep", "joined", "current", "base", "middle",
+        "last", "slash", "slash file", "root", "root missing"};
+
+    for (size_t i = 0; i < sizeof(modes) / sizeof(*modes); i++)
+        if (!strcmp(mode, modes[i]))
+            return (true);
+    return (false);
 }
 
 int main(int argc, char **argv)
@@ -237,11 +311,8 @@ int main(int argc, char **argv)
     char *relative = nullptr;
     int status;
 
-    if (strcmp(mode, "deep") && strcmp(mode, "joined")
-        && strcmp(mode, "current") && strcmp(mode, "base")
-        && strcmp(mode, "middle") && strcmp(mode, "last"))
-        return (printf("usage: folders <folder> "
-            "deep|joined|current|base|middle|last\n"), 2);
+    if (!known(mode))
+        return (printf("usage: folders <folder> <mode>\n"), 2);
     memset(level, 'd', sizeof(level) - 1);
     memset(file, 'f', sizeof(file) - 1);
     whole = join_chain(argv[1]);
