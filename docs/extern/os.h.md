@@ -22,6 +22,8 @@ A project names the file in `[fail] with`, so that a case of the project can mak
 `include/os.h` declares each function once.
 `src/posix` holds the functions for Linux and macOS, and `src/windows` holds the same functions for Windows.
 `src/linux` and `src/macos` hold the parts of `src/posix` where Linux and macOS differ.
+`src/common` holds the parts that are the same on each system, in the C of the standard.
+
 The build compiles `src/{system}/*.c`, where `system` is the key of the target in `.toolchain/toolchain.toml`.
 It also compiles the files of `system_sources`, the key of the target in `.toolchain/config/targets.toml`.
 So no file of the layer asks which platform it is compiled for.
@@ -54,6 +56,11 @@ An event: `struct os_event`, which each platform defines.
 
 The function that a thread runs: `void (*)(void *arg)`.
 
+### os_folder_t
+
+An open folder: `struct os_folder`, which each platform defines.
+It lists the entries of the folder, and reads its files by their names.
+
 ## Functions
 
 Each function that can fail is `[[nodiscard]]`: the caller must use its result.
@@ -81,10 +88,27 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_event_wait` | Waits until the event is set or `nanos` nanoseconds pass, and consumes a set. The clock of `os_get_now` measures the nanoseconds, so a step of the wall clock does not change a wait. On Windows, the wait rounds `nanos` up to whole milliseconds. With `OS_FOREVER` it has no time limit. The core waits with `OS_FOREVER`; a backend watchdog waits with a deadline. |
 | `os_folder_set` | Moves the process into `folder`, so the host runs from the folder of the deployment. Gives 0 on success. |
 | `os_folder_make` | Makes `folder` when it is not there. Gives 0 on success. |
+| `os_folder_open` | Opens the folder `path`, so that the caller can list it and read its files, as *The folders* tells. Gives `nullptr` if no folder of `path` opens. |
+| `os_folder_read_entry` | Gives the name of the next entry of the folder, and sets `*is_folder` to true if the entry is a folder. It skips `.` and `..`. The name stays valid until the next call. Gives `nullptr` after the last entry. |
+| `os_folder_read_file` | Reads the whole file `name` of the folder. It gives the bytes, then one zero byte, and sets `*len` to the count of the bytes. The bytes belong to the folder: they stay valid until its next read or its close, and the caller does not free them. `name` is one name of the folder, with no separator. Gives `nullptr` if the file does not open or read, or if it is a folder. |
+| `os_folder_close` | Closes a folder, and frees its bytes. A null `f` does nothing. |
 | `os_path_whole` | Gives the absolute path of `path`, which the caller frees, or `nullptr`. |
 | `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. It does not wait: it gives 0 on success, 1 if a lock holds the file already, and -1 if the file does not open. The mode is fixed, because the host needs only this mode, and the layer has one implementation of it. |
 | `os_signal_catch` | Catches the signals that stop the process, and writes `line` at the first signal, as *The signals* tells. Gives 0 on success. |
 | `os_signal_is_caught` | Tells if a signal set the flag of `os_signal_catch`. The host reads it between two passes, and then ends its work. |
+
+## The folders
+
+A folder opens by its path, and `os_folder_read_file` reads a file of it by its name. Thus a file can be past the path limit of the system:
+
+- On Linux and macOS, `os_folder_read_file` opens the name from the folder with `openat`, so the path of the file is never joined.
+- A path of a folder past `PATH_MAX` opens one name at a time with `openat`. `PATH_MAX` is 4096 bytes on Linux, and 1024 on macOS.
+- Each folder of that path before the last opens for search only: with `O_PATH` on Linux, and with `O_SEARCH` on macOS. Thus a long path needs the same rights as a short one.
+- On Windows, `GetFullPathNameW` makes the path whole, from the current folder for a relative path. The layer then gives it the form `\\?\`, and joins the name of a file to it.
+- Windows takes that form up to about 32,767 characters. A network path `\\server\share` gets the form `\\?\UNC\server\share`. A path that has the form `\\?\` or `\\.\` already stays as it is.
+- `os_folder_set` keeps the limit of each system, so the current folder stays short: `PATH_MAX` on Linux and macOS, and 260 characters on Windows. Windows needs an opt-in of the program for a longer current folder.
+
+A library loads by its path, so `os_lib_open` keeps the limit of the loader of each system. That limit is 4096 bytes on Linux, 1024 on macOS, and 260 characters on Windows.
 
 ## The signals
 
