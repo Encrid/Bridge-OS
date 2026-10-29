@@ -108,3 +108,59 @@ name = "the zip of a release holds fail.toml"
 run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out", "--pack"]
 claims = { status = 0, order = ["{case}/out/bridge-os-{target}.zip", "fail.toml", "package proof: bridge-os ran"] }
 false = { run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out"] }
+
+[[case]]
+name = "a folder past the path limit of the system lists and reads its file, whose name has 255 bytes"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+claims = { line = ["deep: 0 refused, read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "joined"] }
+
+[[case]]
+name = "the current folder is refused past the path limit of the system"
+run = ["{out}/folders{exe}", "{case}", "current"]
+claims = { line = ["current: refused"] }
+false = { run = ["{out}/folders{exe}", "{case}", "base"] }
+
+[[case]]
+name = "an open or a read of a folder is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+fail = { calloc = 1, malloc = 1, realloc = 1, ferror = 1 }
+claims = { line = ["deep: 4 refused, read 9 bytes: deep file"] }
+false = { fail = {} }
+
+[[case]]
+name = "an open of a folder is refused when the memory of its path fails, and a later one is made"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+fail = { malloc = 2 }
+claims = { line = ["deep: 1 refused, read 9 bytes: deep file"] }
+false = { fail = {} }
+
+[[case]]
+name = "a middle folder that grants only the right to search does not stop a long path, as for a short one; Windows opens no middle folder"
+run = ["{out}/folders{exe}", "{case}", "middle"]
+claims = { line = ["search only: read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "last"] }
+
+[[case]]
+name = 'a whole network path gets the form \\?\UNC\server\share'
+run = ["{out}/whole{exe}", '\\server\share\x']
+claims = { line = ['\\?\UNC\server\share\x'] }
+false = { run = ["{out}/whole{exe}", 'C:\server\share\x'] }
+
+[[case]]
+name = 'a whole path in the form \\?\ stays as it is'
+run = ["{out}/whole{exe}", '\\?\C:\x']
+claims = { line = ['\\?\C:\x'] }
+false = { run = ["{out}/whole{exe}", '\\x\C:\x'] }
+
+[[case]]
+name = 'a whole path in the form \\.\ stays as it is'
+run = ["{out}/whole{exe}", '\\.\C:\x']
+claims = { line = ['\\.\C:\x'] }
+false = { run = ["{out}/whole{exe}", '\\y\C:\x'] }
+
+[[case]]
+name = 'a whole drive path, which GetFullPathNameW makes of a relative path, gets the form \\?\'
+run = ["{out}/whole{exe}", 'C:\dir\x']
+claims = { line = ['\\?\C:\dir\x'] }
+false = { run = ["{out}/whole{exe}", '\\dir\x'] }

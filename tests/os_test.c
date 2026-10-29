@@ -42,6 +42,109 @@ static int wait_for_thread(void)
     return (0);
 }
 
+static int list_folder(os_folder_t *f)
+{
+    bool is_folder = false;
+    bool small = false;
+    bool sub = false;
+    int count = 0;
+    const char *name;
+
+    while ((name = os_folder_read_entry(f, &is_folder))) {
+        small |= !strcmp(name, "small.txt") && !is_folder;
+        sub |= !strcmp(name, "sub") && is_folder;
+        count++;
+    }
+    if (count != 2 || !small || !sub)
+        return (printf("FAIL: list a folder\n"), 1);
+    return (0);
+}
+
+static int read_folder(os_folder_t *f, const char *longname)
+{
+    size_t len = 0;
+    const char *bytes = os_folder_read_file(f, "small.txt", &len);
+
+    if (!bytes || len != 5 || memcmp(bytes, "small", 6))
+        return (printf("FAIL: read a file of a folder\n"), 1);
+    if (os_folder_read_file(f, "sub", &len))
+        return (printf("FAIL: read a folder as a file\n"), 1);
+    if (os_folder_read_file(f, "missing.txt", &len))
+        return (printf("FAIL: read a file that is not there\n"), 1);
+    if (os_folder_read_file(f, longname, &len))
+        return (printf("FAIL: read a name that is too long\n"), 1);
+    return (0);
+}
+
+static int refuse_folders(const char *dir)
+{
+    char path[8192];
+    char name[201] = {};
+    size_t at = (size_t)snprintf(path, sizeof(path), "%s/missing", dir);
+
+    if (os_folder_open("") || os_folder_open(path))
+        return (printf("FAIL: open a folder that is not there\n"), 1);
+    memset(name, 'm', sizeof(name) - 1);
+    while (at < 5000)
+        at += (size_t)snprintf(path + at, sizeof(path) - at, "/%s", name);
+    if (os_folder_open(path))
+        return (printf("FAIL: open a long path that is not there\n"), 1);
+    if (os_folder_open("//127.0.0.1/no_share"))
+        return (printf("FAIL: open a share that is not there\n"), 1);
+    return (0);
+}
+
+#ifdef _WIN32
+static int open_forms(const char *folder)
+{
+    char *whole = os_path_whole(folder);
+    char path[4096];
+    os_folder_t *f;
+    int opened = 0;
+
+    for (int i = 0; whole && i < 2; i++) {
+        snprintf(path, sizeof(path), "%s%s", i ? "\\\\.\\" : "\\\\?\\", whole);
+        f = os_folder_open(path);
+        opened += f != nullptr;
+        os_folder_close(f);
+    }
+    free(whole);
+    if (opened != 2)
+        return (printf("FAIL: open a folder in a form of a device\n"), 1);
+    return (0);
+}
+#endif
+
+static int check_folders(const char *dir, const char *longname)
+{
+    char path[4096];
+    os_folder_t *f;
+    FILE *small;
+    int failed;
+
+    snprintf(path, sizeof(path), "%s/folder", dir);
+    if (os_folder_make(path))
+        return (printf("FAIL: make the folder to list\n"), 1);
+    snprintf(path, sizeof(path), "%s/folder/sub", dir);
+    if (os_folder_make(path))
+        return (printf("FAIL: make the folder to list\n"), 1);
+    snprintf(path, sizeof(path), "%s/folder/small.txt", dir);
+    small = fopen(path, "wb");
+    if (!small || fputs("small", small) < 0 || fclose(small))
+        return (printf("FAIL: write the file to read\n"), 1);
+    snprintf(path, sizeof(path), "%s/folder", dir);
+    f = os_folder_open(path);
+    if (!f)
+        return (printf("FAIL: open a folder\n"), 1);
+    failed = list_folder(f) || read_folder(f, longname);
+    os_folder_close(f);
+    os_folder_close(nullptr);
+#ifdef _WIN32
+    failed = failed || open_forms(path);
+#endif
+    return (failed || refuse_folders(dir));
+}
+
 int main(int argc, char **argv)
 {
     const char *dir;
@@ -139,6 +242,8 @@ int main(int argc, char **argv)
 
     memset(longname, 'a', sizeof(longname) - 1);
     longname[sizeof(longname) - 1] = '\0';
+    if (check_folders(dir, longname))
+        return (1);
     if (os_lib_open(longname))
         return (printf("FAIL: open a long name\n"), 1);
     if (os_lib_open("no_such_library"))
