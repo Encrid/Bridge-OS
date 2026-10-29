@@ -3,7 +3,8 @@
 `os_lock` takes the run lock on Linux and macOS.
 
 It opens the path with `open`, then asks `flock` for `LOCK_EX` without blocking.
-The result is 0 when the process holds the lock, 1 when another process holds it, and -1 when the open fails.
+The result is 0 when the process holds the lock, and -1 when the open fails.
+It is 1 when an earlier lock holds the file: of another process, or of an earlier call in this process.
 It closes the descriptor if `flock` refuses.
 
 ## Functions
