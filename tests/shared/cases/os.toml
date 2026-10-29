@@ -50,6 +50,19 @@ claims = { status = 0, line = ["a call 3145728 bytes deep returned"] }
 false = { run = ["{out}/stack{exe}", "1048576", "3145728"] }
 
 [[case]]
+name = "each started thread can use the stack that os_thread_stack_left gives, down to its last 4096 bytes"
+run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576"]
+fail = { pthread_getattr_np = 1 }
+claims = { status = 0, line = ["thread of 4194304 bytes: within its stack, used down to 4096 bytes", "thread of 1048576 bytes: within its stack, used down to 4096 bytes"] }
+false = { run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576", "past"] }
+
+[[case]]
+name = "the first thread of a process can use the stack that os_thread_stack_left gives, down to its last 4096 bytes"
+run = ["{out}/stack_left{exe}", "main"]
+claims = { status = 0, line = ["main: used down to 4096 bytes"] }
+false = { run = ["{out}/stack_left{exe}", "main", "past"] }
+
+[[case]]
 name = "a process pins any number of libraries"
 run = ["{out}/pins{exe}", "{case}", "65"]
 claims = { line = ["pinned 65 of 65 libraries"] }
