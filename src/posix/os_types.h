@@ -26,4 +26,8 @@ struct os_event {
     int set;
 };
 
+int os_cond_start(pthread_cond_t *cond);
+
+void os_cond_wait(os_event_t *e, uint64_t nanos);
+
 #endif

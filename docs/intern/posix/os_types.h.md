@@ -35,4 +35,10 @@ An event: a flag, the mutex that guards the flag, and a condition for a wait.
 
 ## Functions
 
-The header declares no function.
+The header declares the two functions of a condition that `src/posix/event.c` calls.
+`src/linux/event_clock.c` defines them for Linux, and `src/macos/event_clock.c` for macOS.
+
+| Function | Result |
+| --- | --- |
+| `os_cond_start(cond)` | Starts the condition of an event. Gives 0 on success. |
+| `os_cond_wait(e, nanos)` | Waits on the condition of `e` until its flag is set or `nanos` nanoseconds pass. The caller holds the mutex of `e`. |
