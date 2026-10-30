@@ -5,13 +5,199 @@ claims = { matches = ["os ok"] }
 false = { run = ["{out}/os{exe}", "{case}", "fail"] }
 
 [[case]]
-name = "the os layer refuses when a resource runs out"
-run = ["{out}/counted{exe}"]
-claims = { matches = ["counted ok"] }
-false = { run = ["{out}/counted{exe}", "fail"] }
+name = "an event is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "event"]
+fail = { malloc = 1, pthread_mutex_init = 1, pthread_cond_init = 1, CreateEventA = 1 }
+claims = { matches = ["event: [1-9] refused, then made"] }
+false = { fail = {} }
+
+[[case]]
+name = "a mutex is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "mutex"]
+fail = { malloc = 1, pthread_mutex_init = 1 }
+claims = { matches = ["mutex: [1-9] refused, then made"] }
+false = { fail = {} }
+
+[[case]]
+name = "a thread is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/refuse{exe}", "thread"]
+fail = { malloc = 1, pthread_create = 1 }
+claims = { matches = ["thread: [1-9] refused, then made"] }
+false = { fail = {} }
 
 [[case]]
 name = "the clock of the os layer moves in steps below a microsecond"
 run = ["{out}/clock{exe}", "1000"]
 claims = { line = ["step below 1000 ns"] }
 false = { run = ["{out}/clock{exe}", "1"] }
+
+[[case]]
+name = "a wait of less than a millisecond lasts until its nanoseconds pass"
+run = ["{python}", "tests/wait_driver.py", "{out}/wait{exe}", "500000", "0", "200"]
+claims = { line = ["0 of 200 first waits of a process took less than 500000 ns"] }
+false = { run = ["{python}", "tests/wait_driver.py", "{out}/wait{exe}", "500000", "0", "200", "set"] }
+
+[[case]]
+name = "a step of the wall clock does not change a wait"
+run = ["{out}/wait{exe}", "50000000", "3600", "20"]
+claims = { line = ["0 of 20 waits took less than 50000000 ns"] }
+false = { run = ["{out}/wait{exe}", "50000000", "3600", "20", "set"] }
+
+[[case]]
+name = "a thread gets the stack that its start asks for"
+run = ["{out}/stack{exe}", "4194304", "3145728"]
+claims = { status = 0, line = ["a call 3145728 bytes deep returned"] }
+false = { run = ["{out}/stack{exe}", "1048576", "3145728"] }
+
+[[case]]
+name = "each started thread can use the stack that os_thread_stack_left gives, down to its last 4096 bytes"
+run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576"]
+fail = { pthread_getattr_np = 1 }
+claims = { status = 0, line = ["thread of 4194304 bytes: used down to 4096 bytes", "thread of 1048576 bytes: used down to 4096 bytes"] }
+false = { run = ["{out}/stack_left{exe}", "thread", "4194304", "1048576", "past"] }
+
+[[case]]
+name = "the first thread of a process can use the stack that os_thread_stack_left gives, down to its last 4096 bytes"
+run = ["{out}/stack_left{exe}", "main"]
+claims = { status = 0, line = ["main: used down to 4096 bytes"] }
+false = { run = ["{out}/stack_left{exe}", "main", "past"] }
+
+[[case]]
+name = "a process pins any number of libraries"
+run = ["{out}/pins{exe}", "{case}", "65"]
+claims = { line = ["pinned 65 of 65 libraries"] }
+false = { run = ["{out}/pins{exe}", "{case}", "65", "closed"] }
+
+[[case]]
+name = "an interrupt sets the flag, and the program ends its work"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"]
+claims = { status = 0, order = ["ready", "caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice", "a second signal ends it at once"] }
+
+[[case]]
+name = "a termination sets the flag, and the program ends its work"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination", "a second signal ends it at once"]
+claims = { status = 0, order = ["ready", "caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "termination twice", "a second signal ends it at once"] }
+
+[[case]]
+name = "a hang-up sets the flag, and the program ends its work"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "hang-up", "a second signal ends it at once"]
+claims = { status = 0, order = ["ready", "caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt, hang-up", "a second signal ends it at once"] }
+
+[[case]]
+name = "the first signal writes the line of the host at once, while the program hangs"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"]
+claims = { order = ["ready", "a second signal ends it at once", "caught"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "ignored only", "a second signal ends it at once"] }
+
+[[case]]
+name = "a second signal ends the program at once with status 1"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt twice", "a second signal ends it at once"]
+claims = { status = 1, order = ["ready", "a second signal ends it at once"], lacks = ["caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "interrupt", "a second signal ends it at once"] }
+
+[[case]]
+name = "a second signal ends the program at once while its output is full"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "full output, twice", "a second signal ends it at once"]
+claims = { status = 1, order = ["ready", "stopped reading the output of the program"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "full output", "a second signal ends it at once"] }
+
+[[case]]
+name = "a signal that the parent ignores stays ignored"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "ignored, then caught", "a second signal ends it at once"]
+claims = { status = 0, order = ["ready", "caught", "stopped"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "caught, then caught", "a second signal ends it at once"] }
+
+[[case]]
+name = "a write to a closed output does not end the program"
+run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output", "a second signal ends it at once"]
+claims = { status = 0, order = ["ready", "closed the output of the program"] }
+false = { run = ["{python}", "tests/signal_driver.py", "{out}/signal{exe}", "closed output, twice", "a second signal ends it at once"] }
+
+[[case]]
+name = "the zip of a release holds fail.toml"
+run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out", "--pack"]
+claims = { status = 0, order = ["{case}/out/bridge-os-{target}.zip", "fail.toml", "package proof: bridge-os ran"] }
+false = { run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out"] }
+
+[[case]]
+name = "a folder past the path limit of the system lists and reads its file, whose name has 255 bytes"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+claims = { line = ["deep: 0 refused, read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "joined"] }
+
+[[case]]
+name = "the current folder is refused past the path limit of the system"
+run = ["{out}/folders{exe}", "{case}", "current"]
+claims = { line = ["current: refused"] }
+false = { run = ["{out}/folders{exe}", "{case}", "base"] }
+
+[[case]]
+name = "an open or a read of a folder is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+fail = { calloc = 1, malloc = 1, realloc = 1, ferror = 1 }
+claims = { line = ["deep: 4 refused, read 9 bytes: deep file"] }
+false = { fail = {} }
+
+[[case]]
+name = "an open of a folder is refused when the memory of its path fails, and a later one is made"
+run = ["{out}/folders{exe}", "{case}", "deep"]
+fail = { malloc = 2 }
+claims = { line = ["deep: 1 refused, read 9 bytes: deep file"] }
+false = { fail = {} }
+
+[[case]]
+name = "a middle folder that grants only the right to search does not stop a long path, as for a short one; Windows opens no middle folder"
+run = ["{out}/folders{exe}", "{case}", "middle"]
+claims = { line = ["search only: read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "last"] }
+
+[[case]]
+name = 'a whole network path gets the form \\?\UNC\server\share'
+run = ["{out}/whole{exe}", '\\server\share\x']
+claims = { line = ['\\?\UNC\server\share\x'] }
+false = { run = ["{out}/whole{exe}", 'C:\server\share\x'] }
+
+[[case]]
+name = 'a whole path in the form \\?\ stays as it is'
+run = ["{out}/whole{exe}", '\\?\C:\x']
+claims = { line = ['\\?\C:\x'] }
+false = { run = ["{out}/whole{exe}", '\\x\C:\x'] }
+
+[[case]]
+name = 'a whole path in the form \\.\ stays as it is'
+run = ["{out}/whole{exe}", '\\.\C:\x']
+claims = { line = ['\\.\C:\x'] }
+false = { run = ["{out}/whole{exe}", '\\y\C:\x'] }
+
+[[case]]
+name = 'a whole drive path, which GetFullPathNameW makes of a relative path, gets the form \\?\'
+run = ["{out}/whole{exe}", 'C:\dir\x']
+claims = { line = ['\\?\C:\dir\x'] }
+false = { run = ["{out}/whole{exe}", '\\dir\x'] }
+
+[[case]]
+name = 'a whole path that ends with a separator loses one separator'
+run = ["{out}/whole{exe}", 'C:\mods\']
+claims = { line = ['\\?\C:\mods'] }
+false = { run = ["{out}/whole{exe}", 'C:\mods\\'] }
+
+[[case]]
+name = 'the whole root of a drive loses its separator'
+run = ["{out}/whole{exe}", 'C:\']
+claims = { line = ['\\?\C:'] }
+false = { run = ["{out}/whole{exe}", 'C:\\'] }
+
+[[case]]
+name = "a folder path that ends with a separator opens, lists and reads, also past the path limit"
+run = ["{out}/folders{exe}", "{case}", "slash"]
+claims = { line = ["slash: listed, and read 9 bytes: deep file"] }
+false = { run = ["{out}/folders{exe}", "{case}", "slash file"] }
+
+[[case]]
+name = "the root of the drive of a folder, or /, opens and lists"
+run = ["{out}/folders{exe}", "{case}", "root"]
+claims = { line = ["root: listed"] }
+false = { run = ["{out}/folders{exe}", "{case}", "root missing"] }

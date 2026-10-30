@@ -1,0 +1,15 @@
+/*
+** Copyright (C) 2026 Enkrid
+**
+** Under the GNU Affero General Public License, version 3 only: see license.
+*/
+#ifndef BRIDGE_OS_WHOLE_H
+    #define BRIDGE_OS_WHOLE_H
+
+    #include <stddef.h>
+
+constexpr size_t OS_PLACE = 7;
+
+void os_mark_whole(wchar_t *whole, size_t size);
+
+#endif

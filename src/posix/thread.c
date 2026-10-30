@@ -3,8 +3,10 @@
 **
 ** Under the GNU Affero General Public License, version 3 only: see license.
 */
+#include <limits.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "os_types.h"
 
@@ -16,15 +18,23 @@ static void *run_thread(void *p)
     return (nullptr);
 }
 
-os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg)
+os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg, size_t stack)
 {
+    size_t page = (size_t)sysconf(_SC_PAGESIZE);
+    size_t least = stack < PTHREAD_STACK_MIN ? PTHREAD_STACK_MIN : stack;
     os_thread_t *t = malloc(sizeof(*t));
+    pthread_attr_t attr;
+    int failed;
 
     if (!t)
         return (nullptr);
     t->fn = fn;
     t->arg = arg;
-    if (!pthread_create(&t->handle, nullptr, run_thread, t))
+    pthread_attr_init(&attr);
+    failed = pthread_attr_setstacksize(&attr, (least + page - 1) / page * page)
+        || pthread_create(&t->handle, &attr, run_thread, t);
+    pthread_attr_destroy(&attr);
+    if (!failed)
         return (t);
     free(t);
     return (nullptr);

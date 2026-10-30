@@ -1,7 +1,7 @@
 [[artifact]]
 name = "os"
 kind = "archive"
-sources = ["src/{system}/*.c"]
+sources = ["src/{system}/*.c", "{system_sources}"]
 include = ["include"]
 flags = ["{quiet}", "{system_defines}"]
 
@@ -9,6 +9,11 @@ flags = ["{quiet}", "{system_defines}"]
 name = "leaks.toml"
 kind = "file"
 sources = [".toolchain/config/leaks.toml"]
+
+[[artifact]]
+name = "fail.toml"
+kind = "file"
+sources = [".toolchain/config/fail.toml"]
 
 [[artifact]]
 name = "fixture"
@@ -30,7 +35,7 @@ sources = ["tests/fixture_two.c"]
 name = "os"
 kind = "program"
 test = true
-sources = ["tests/os_test.c", "src/{system}/*.c"]
+sources = ["tests/os_test.c", "src/{system}/*.c", "{system_sources}"]
 include = ["include"]
 defines = ["{paths}"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
@@ -39,25 +44,71 @@ flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
 name = "clock"
 kind = "program"
 test = true
-sources = ["tests/clock_test.c", "src/{system}/*.c"]
+sources = ["tests/clock_test.c", "src/{system}/*.c", "{system_sources}"]
 include = ["include"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
 
 [[artifact]]
-name = "counted_os"
-kind = "archive"
-test = true
-sources = ["src/{system}/*.c"]
-include = ["include"]
-defines = ["malloc=counted_malloc", "calloc=counted_calloc", "realloc=counted_realloc", "free=counted_free", "{counted_system}"]
-flags = ["{quiet}", "{system_defines}"]
-
-[[artifact]]
-name = "counted"
+name = "wait"
 kind = "program"
 test = true
-sources = ["tests/counted/*.c"]
-include = ["include", "tests/counted"]
-defines = ["COUNTED"]
-link = ["{out}/counted_os.a"]
+sources = ["tests/wait_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "stack"
+kind = "program"
+test = true
+sources = ["tests/stack_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "pins"
+kind = "program"
+test = true
+sources = ["tests/pins_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+defines = ["{paths}"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "signal"
+kind = "program"
+test = true
+sources = ["tests/signal_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "refuse"
+kind = "program"
+test = true
+sources = ["tests/refuse_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "folders"
+kind = "program"
+test = true
+sources = ["tests/folders_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
+flags = ["{quiet}", "{system_defines}", "{system_libraries}"]
+
+[[artifact]]
+name = "whole"
+kind = "program"
+test = true
+sources = ["tests/whole_test.c", "src/windows/whole_form.c"]
+include = ["src/windows"]
+flags = ["{quiet}"]
+
+[[artifact]]
+name = "stack_left"
+kind = "program"
+test = true
+sources = ["tests/stack_left_test.c", "src/{system}/*.c", "{system_sources}"]
+include = ["include"]
 flags = ["{quiet}", "{system_defines}", "{system_libraries}"]

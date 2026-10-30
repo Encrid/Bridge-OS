@@ -1,0 +1,7 @@
+[fail.calls]
+pthread_mutex_init = "12"
+pthread_cond_init = "12"
+pthread_create = "12"
+CreateEventA = "nullptr"
+pthread_getattr_np = "12"
+ferror = "1"

@@ -12,6 +12,7 @@
 typedef struct os_thread os_thread_t;
 typedef struct os_mutex os_mutex_t;
 typedef struct os_event os_event_t;
+typedef struct os_folder os_folder_t;
 typedef void (*os_thread_fn_t)(void *arg);
 
 constexpr uint64_t OS_SECOND = 1'000'000'000;
@@ -31,9 +32,12 @@ void os_lib_close(void *lib);
 
 [[nodiscard]] int os_lib_pin(const char *path);
 
-[[nodiscard]] os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg);
+[[nodiscard]] os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg,
+    size_t stack);
 
 void os_thread_join(os_thread_t *t);
+
+[[nodiscard]] size_t os_thread_stack_left(void);
 
 uint64_t os_get_thread_id(void);
 
@@ -59,8 +63,21 @@ void os_event_wait(os_event_t *e, uint64_t nanos);
 
 [[nodiscard]] int os_folder_make(const char *folder);
 
+[[nodiscard]] os_folder_t *os_folder_open(const char *path);
+
+[[nodiscard]] const char *os_folder_read_entry(os_folder_t *f, bool *is_folder);
+
+[[nodiscard]] char *os_folder_read_file(os_folder_t *f, const char *name,
+    size_t *len);
+
+void os_folder_close(os_folder_t *f);
+
 [[nodiscard]] char *os_path_whole(const char *path);
 
 [[nodiscard]] int os_lock(const char *path);
+
+[[nodiscard]] int os_signal_catch(const char *line);
+
+bool os_signal_is_caught(void);
 
 #endif

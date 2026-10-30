@@ -15,15 +15,16 @@ static DWORD WINAPI run_thread(LPVOID p)
     return (0);
 }
 
-os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg)
+os_thread_t *os_thread_start(os_thread_fn_t fn, void *arg, size_t stack)
 {
+    DWORD reserve = STACK_SIZE_PARAM_IS_A_RESERVATION;
     os_thread_t *t = malloc(sizeof(*t));
 
     if (!t)
         return (nullptr);
     t->fn = fn;
     t->arg = arg;
-    t->handle = CreateThread(nullptr, 0, run_thread, t, 0, nullptr);
+    t->handle = CreateThread(nullptr, stack, run_thread, t, reserve, nullptr);
     if (t->handle)
         return (t);
     free(t);

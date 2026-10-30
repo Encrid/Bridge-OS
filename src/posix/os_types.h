@@ -6,7 +6,9 @@
 #ifndef BRIDGE_OS_TYPES_H
     #define BRIDGE_OS_TYPES_H
 
+    #include <dirent.h>
     #include <pthread.h>
+    #include <stdatomic.h>
 
     #include "os.h"
 
@@ -25,5 +27,22 @@ struct os_event {
     pthread_cond_t cond;
     int set;
 };
+
+struct os_folder {
+    DIR *dir;
+    char *bytes;
+};
+
+struct os_stop {
+    atomic_bool caught;
+    _Atomic(const char *) line;
+    atomic_size_t length;
+};
+
+int os_cond_start(pthread_cond_t *cond);
+
+void os_cond_wait(os_event_t *e, uint64_t nanos);
+
+int os_open_search(int at, const char *name);
 
 #endif
