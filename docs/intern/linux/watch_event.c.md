@@ -15,7 +15,7 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The watch*.
 
 An event that comes for a folder can change the watched folders:
 
-- A folder that is made or moved in gets its watches before the take gives its name, if its entries are within the depth.
+- A folder that is made or moved in gets its watches before the take gives its name, if its path is within `depth` - 1.
 - A folder that moves out loses the watches of its folders with `os_drop_tree`. Else its watches tell the changes of a folder that is no longer in `folder`.
 - A folder that is removed gives `IN_IGNORED` for each of its watches.
 
@@ -26,6 +26,6 @@ If a watch of a new folder fails, or a watch of the folders again fails, the wat
 | Function | Result |
 | --- | --- |
 | `end_folder(w, f, mask)` | Stops the watch for an event of `folder`, or drops the folder `f` for `IN_IGNORED`, as *The events* tells. Gives `OS_AGAIN`. |
-| `follow_folder(w, f, mask)` | Watches or drops the folder of `name`, as *The events* tells. |
+| `follow_folder(w, mask)` | Watches or drops the folder of `name`, as *The events* tells. |
 | `give_name(w, f, e, name)` | Writes the path of the entry of the event `e` of the folder `f` into `name`, and gives 1. |
 | `os_use_event(w, name)` | Uses the next event of `events`, as *The events* tells. Gives 1, 2 or `OS_AGAIN`. |

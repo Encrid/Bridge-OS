@@ -9,6 +9,12 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The watch*.
 `full` has room for `PATH_MAX` bytes and an end, so a cut path has `PATH_MAX` bytes. `inotify_add_watch` refuses such a path with `ENAMETOOLONG`.
 The watch starts before the walk of the folder, so a cut path is never opened.
 
+## The depth
+
+A watch of a folder tells the entries of the folder. Thus a folder needs a watch when the path of its entries is within the depth.
+`has_deeper` tells if the folders in a folder need watches. For `folder` itself, the depth must be above 1. For another folder, its path must be within `depth` - 2.
+A folder other than `folder` gets a watch only at a depth of 2 or more, so `depth` - 2 is never below 0.
+
 ## The table
 
 `keep_folder` adds a folder at the end of `folders`. `inotify` gives each new watch a number above the numbers before it, so `folders` stays in order.
@@ -20,6 +26,7 @@ A folder that has a watch already gets the same number. Then `keep_folder` keeps
 | Function | Result |
 | --- | --- |
 | `grow_table(w)` | Makes room for one more folder. Tells if the room is there. |
-| `keep_folder(w, wd, parts)` | Keeps the folder of `full` with the number `wd`, as *The table* tells. Tells if it kept it. |
-| `add_folders(w, in, end, parts)` | Watches each folder of the open folder `in`, with `os_add_tree`. Gives 0, or -1 at the first failure. |
-| `os_add_tree(w, end, parts)` | Watches the folder of `full`, whose path ends at `end`, and its folders while their entries are within the depth. Gives 0, or -1 if a watch or an open fails. |
+| `keep_folder(w, wd)` | Keeps the folder of `full` with the number `wd`, as *The table* tells. Tells if it kept it. |
+| `has_deeper(w, path)` | Tells if the folders in the folder `path` need watches, as *The depth* tells. |
+| `add_folders(w, in, end)` | Watches each folder of the open folder `in`, with `os_add_tree`. Gives 0, or -1 at the first failure. |
+| `os_add_tree(w, end)` | Watches the folder of `full`, whose path ends at `end`, and its folders down to the depth. Gives 0, or -1 if a watch or an open fails. |

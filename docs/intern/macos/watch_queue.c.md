@@ -17,6 +17,6 @@ Thus this file is the only file that includes `<dispatch/dispatch.h>`, and it do
 | Function | Result |
 | --- | --- |
 | `wait_nothing(context)` | Does nothing. |
-| `os_queue_make()` | Makes a serial queue with `dispatch_queue_create`. Gives `nullptr` if it fails. |
+| `os_queue_make()` | Makes a serial queue with `dispatch_queue_create`, which `<dispatch/queue.h>` declares to never give `nullptr`. |
 | `os_queue_wait(queue)` | Waits for the queue, as *The wait* tells. |
 | `os_queue_free(queue)` | Frees the queue with `dispatch_release`. |

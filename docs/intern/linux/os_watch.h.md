@@ -20,7 +20,6 @@ A folder that a watch of `inotify` watches.
 | Field | Content |
 | --- | --- |
 | `wd` | The number of the watch of `inotify`. |
-| `parts` | The count of the names of the path: 0 for `folder`. |
 | `path` | The path of the folder from `folder`: an empty text for `folder`. |
 
 ### struct os_watch
@@ -46,7 +45,7 @@ The watch of `os_watch_start`, on Linux: `docs/intern/linux/folder_watch.c.md`, 
 
 | Function | Result |
 | --- | --- |
-| `os_add_tree(w, end, parts)` | Watches the folder of `full`, and its folders down to the depth: `docs/intern/linux/watch_tree.c.md`. |
+| `os_add_tree(w, end)` | Watches the folder of `full`, and its folders down to the depth: `docs/intern/linux/watch_tree.c.md`. |
 | `os_find_folder(w, wd)` | Gives the watched folder of `wd`, or `nullptr`: `docs/intern/linux/watch_table.c.md`. |
 | `os_drop_tree(w, path)` | Stops the watches of the folder `path` and of its folders. |
 | `os_drop_folder(w, f)` | Takes the folder `f` out of `folders`. |
