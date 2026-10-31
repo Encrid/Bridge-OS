@@ -7,7 +7,8 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The watch*.
 
 A name of a watch has a `/` between two names, so its count of names is its count of `/` and 1.
 `os_is_within` counts the names, and compares their count with `depth`.
-The watches of Windows and of macOS use it, because their systems tell the changes of all the levels.
+The watches of Windows and of macOS drop the deeper names with it, because their systems tell the changes of all the levels.
+The watch of Linux uses it to find the folders that need a watch of their own.
 
 ## Functions
 
