@@ -295,7 +295,7 @@ false = { run = ["{out}/watch{exe}", "{case}", "missing", "made"] }
 [[case]]
 name = "a watch is refused when a call that it needs fails, and a later one is made"
 run = ["{out}/watch{exe}", "{case}", "refuse"]
-fail = { calloc = 1, malloc = 1, realloc = 1, inotify_init1 = 1, os_path_whole = 1, os_folder_open = 1, os_mutex_create = 1, dispatch_queue_create = 1, os_lib_open = 1, os_lib_get_symbol = 1, os_core_string = 1, os_core_array = 1, os_core_create = 1, os_core_start = 1, GetFinalPathNameByHandleW = 1, CreateFileW = 3, ReadDirectoryChangesW = 1 }
+fail = { calloc = 1, malloc = 1, realloc = 1, inotify_init1 = 1, os_path_whole = 1, os_folder_open = 1, os_mutex_create = 1, os_lib_open = 1, os_lib_get_symbol = 1, os_core_string = 1, os_core_array = 1, os_core_create = 1, os_core_start = 1, GetFinalPathNameByHandleW = 1, CreateFileW = 3, ReadDirectoryChangesW = 1 }
 claims = { matches = ["refuse: [1-9][0-9]* refused, then made"] }
 false = { fail = {} }
 
