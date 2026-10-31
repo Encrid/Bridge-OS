@@ -1,7 +1,7 @@
 # include/os.h
 
 This header gives the operating system as Bridge, its backends and its host need it.
-That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, paths, locks and signals.
+That is address space, shared libraries, threads, the clock, a mutex, an event, and the host's folders, watches, paths, locks and signals.
 
 ## The layer
 
@@ -61,6 +61,11 @@ The function that a thread runs: `void (*)(void *arg)`.
 An open folder: `struct os_folder`, which each platform defines.
 It lists the entries of the folder, and reads its files by their names.
 
+### os_watch_t
+
+A watch of a folder: `struct os_watch`, which each platform defines.
+It tells which entries of the folder changed, as *The watch* tells.
+
 ## Functions
 
 Each function that can fail is `[[nodiscard]]`: the caller must use its result.
@@ -93,6 +98,9 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_folder_read_entry` | Gives the name of the next entry of the folder, and sets `*is_folder` to true if the entry is a folder. It skips `.` and `..`. The name stays valid until the next call. Gives `nullptr` after the last entry. |
 | `os_folder_read_file` | Reads the whole file `name` of the folder. It gives the bytes, then one zero byte, and sets `*len` to the count of the bytes. The bytes belong to the folder: they stay valid until its next read or its close, and the caller does not free them. `name` is one name of the folder, with no separator. Gives `nullptr` if the file does not open or read, or if it is a folder. |
 | `os_folder_close` | Closes a folder, and frees its bytes. A null `f` does nothing. |
+| `os_watch_start` | Starts a watch of the entries of `folder`, down to `depth` levels of folders, as *The watch* tells. Gives `nullptr` if `depth` is 0, if no folder of `folder` opens, or if a call that it needs fails. |
+| `os_watch_take` | Gives the next change of a watch, and does not wait. It gives 1 and sets `*name`, or it gives 0, 2 or -1, as *The watch* tells. |
+| `os_watch_stop` | Stops a watch, and frees it. A null `w` does nothing. |
 | `os_path_whole` | Gives the absolute path of `path`, which the caller frees, or `nullptr`. |
 | `os_lock` | Takes an exclusive lock on the file `path`, so one host runs a deployment at a time. It does not wait: it gives 0 on success, 1 if a lock holds the file already, and -1 if the file does not open. The mode is fixed, because the host needs only this mode, and the layer has one implementation of it. |
 | `os_signal_catch` | Catches the signals that stop the process, and writes `line` at the first signal, as *The signals* tells. Gives 0 on success. |
@@ -125,6 +133,37 @@ A folder opens by its path, and `os_folder_read_file` reads a file of it by its 
 The path of a folder can end with a separator. It can also be a root: `/` on Linux and macOS, or the root of a drive on Windows, for example `C:\`.
 
 A library loads by its path, so `os_lib_open` keeps the limit of the loader of each system. That limit is 4096 bytes on Linux, 1024 on macOS, and 260 characters on Windows.
+
+## The watch
+
+A watch tells which entries of a folder changed. Thus a caller reads only these entries, and not all the entries of the folder.
+At a depth of 1, the watch tells the entries of `folder`. At 2, it also tells the entries of each folder in it, and so on.
+
+`os_watch_take` gives one of these results:
+
+| Result | Meaning |
+| --- | --- |
+| 1 | `*name` is the path of an entry that was made, changed, moved or removed. The path starts in `folder`, and has a `/` between two names. It stays valid until the next call of `os_watch_take` or `os_watch_stop`. |
+| 0 | No change is left. |
+| 2 | The watch lost changes. The caller looks at all of `folder` again, and the watch goes on. |
+| -1 | The watch stopped, for example because `folder` was removed or moved. Each later call also gives -1. |
+
+- An entry can come more than once. A move gives the old name and the new name.
+- A name can be a folder. Then the entries in that folder can have changed too, with no names of their own. For example, a folder that moves in brings its entries. Thus the caller looks at that folder.
+- No path has more names than `depth`.
+- One thread at a time uses a watch.
+
+The watch lets other programs remove or move `folder`. A file system that refuses notices of change makes `os_watch_start` give `nullptr`.
+On Linux, a watch of a network file system does not tell the changes that other machines make. On macOS, it can miss them.
+
+Each system tells the changes in its own way:
+
+- On Windows, `ReadDirectoryChangesW` tells the changes, and a second one watches the folder above `folder` for its move. The root of a drive cannot move, and has no folder above it.
+- On Linux, `inotify` watches each folder down to the depth. A folder that comes in gets its watch before `os_watch_take` gives its name. `max_user_instances` and `max_user_watches` of the system limit the count of the watches and of their folders. A folder whose path is longer than `PATH_MAX` cannot be watched.
+- On macOS, FSEvents tells the changes. The layer loads `CoreServices` when it starts a watch, so a program that links `os.a` links no framework. FSEvents can tell a change from just before the start, for example the removal of an earlier folder with the same path.
+
+A watch gives 2 when the changes between two takes do not fit. It keeps 64 KiB on Windows and on macOS, and `max_queued_events` changes on Linux. FSEvents can also lose changes.
+A take with no change makes no call of the system on Windows and on macOS, and one call of `read` on Linux.
 
 ## The signals
 

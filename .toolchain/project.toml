@@ -5,3 +5,8 @@ name = "bridge-os"
 cases = "tests/shared/cases"
 timeout = 120
 copies = 1
+
+[[style.exception]]
+rule = "F5"
+path = "src/macos/watch_events.c:on_events"
+why = "FSEvents fixes the 6 parameters of its callback."

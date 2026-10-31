@@ -37,10 +37,42 @@ struct os_folder {
     char name[3 * OS_NAME_ROOM];
 };
 
+constexpr DWORD OS_CHANGES_ROOM = 65536;
+constexpr DWORD OS_ABOVE_ROOM = 1024;
+constexpr size_t OS_NAME_BYTES = 3 * OS_CHANGES_ROOM / 2 + 1;
+
+struct os_watch {
+    HANDLE folder;
+    HANDLE above;
+    OVERLAPPED changes;
+    OVERLAPPED above_changes;
+    wchar_t *final;
+    wchar_t *again;
+    uint32_t depth;
+    DWORD at;
+    DWORD got;
+    bool reading;
+    bool looking;
+    bool stopped;
+    alignas(DWORD) BYTE records[OS_CHANGES_ROOM];
+    alignas(DWORD) BYTE above_records[OS_ABOVE_ROOM];
+    char name[OS_NAME_BYTES];
+};
+
 struct os_stop {
     atomic_bool caught;
     const char *line;
     DWORD length;
 };
+
+bool os_read_changes(os_watch_t *w);
+
+bool os_read_above(os_watch_t *w);
+
+bool os_is_in_place(os_watch_t *w);
+
+int os_finish_read(os_watch_t *w);
+
+void os_end_read(HANDLE handle, OVERLAPPED *overlapped);
 
 #endif

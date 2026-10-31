@@ -201,3 +201,107 @@ name = "the root of the drive of a folder, or /, opens and lists"
 run = ["{out}/folders{exe}", "{case}", "root"]
 claims = { line = ["root: listed"] }
 false = { run = ["{out}/folders{exe}", "{case}", "root missing"] }
+
+[[case]]
+name = "a new entry of a watched folder comes as its name"
+run = ["{out}/watch{exe}", "{case}", "new"]
+claims = { line = ["new: a.txt"] }
+false = { run = ["{out}/watch{exe}", "{case}", "new", "beside"] }
+
+[[case]]
+name = "a changed entry of a watched folder comes as its name"
+run = ["{out}/watch{exe}", "{case}", "changed"]
+claims = { line = ["changed: a.txt"] }
+false = { run = ["{out}/watch{exe}", "{case}", "changed", "other"] }
+
+[[case]]
+name = "a removed entry of a watched folder comes as its name"
+run = ["{out}/watch{exe}", "{case}", "removed"]
+claims = { line = ["removed: a.txt"] }
+false = { run = ["{out}/watch{exe}", "{case}", "removed", "other"] }
+
+[[case]]
+name = "a watch gives the names down to its depth, and no deeper name"
+run = ["{out}/watch{exe}", "{case}", "depth"]
+claims = { line = ["depth: sub/b.txt at 2, nothing at 1, nothing at 2"] }
+false = { run = ["{out}/watch{exe}", "{case}", "depth", "flat"] }
+
+[[case]]
+name = "a watch of a depth of 0 is refused"
+run = ["{out}/watch{exe}", "{case}", "zero"]
+claims = { line = ["zero: refused"] }
+false = { run = ["{out}/watch{exe}", "{case}", "zero", "one"] }
+
+[[case]]
+name = "a take with no change gives 0 at once"
+run = ["{out}/watch{exe}", "{case}", "quiet"]
+claims = { line = ["quiet: 1000 of 1000 takes gave 0, at once"] }
+false = { run = ["{out}/watch{exe}", "{case}", "quiet", "busy"] }
+
+[[case]]
+name = "a burst of new entries comes as each of their names"
+run = ["{out}/watch{exe}", "{case}", "burst"]
+claims = { line = ["burst: 100 of 100"] }
+false = { run = ["{out}/watch{exe}", "{case}", "burst", "beside"] }
+
+[[case]]
+name = "changes that do not fit between two takes give 2, and the watch goes on"
+run = ["{out}/watch{exe}", "{case}", "overflow"]
+claims = { line = ["overflow: 2, then after.txt"] }
+false = { run = ["{out}/watch{exe}", "{case}", "overflow", "few"] }
+
+[[case]]
+name = "a removed folder stops its watch, and each later take gives -1"
+run = ["{out}/watch{exe}", "{case}", "gone"]
+claims = { line = ["gone: -1, then -1"] }
+false = { run = ["{out}/watch{exe}", "{case}", "gone", "beside"] }
+
+[[case]]
+name = "a folder moved to a name of the same length or of a different length stops its watch"
+run = ["{out}/watch{exe}", "{case}", "moved"]
+claims = { line = ["moved: -1 and -1"] }
+false = { run = ["{out}/watch{exe}", "{case}", "moved", "beside"] }
+
+[[case]]
+name = "a folder made beside a watched folder does not stop its watch"
+run = ["{out}/watch{exe}", "{case}", "beside"]
+claims = { line = ["beside: marker, still watching"] }
+false = { run = ["{out}/watch{exe}", "{case}", "beside", "moved"] }
+
+[[case]]
+name = "a folder that comes into a watched folder gets its watch before its name comes, down to the depth"
+run = ["{out}/watch{exe}", "{case}", "folders"]
+claims = { line = ["folders: new, new/x.txt, new/inner and sub"] }
+false = { run = ["{out}/watch{exe}", "{case}", "folders", "flat"] }
+
+[[case]]
+name = "a folder renamed in a watched folder comes as its two names, and its entries come with the new name"
+run = ["{out}/watch{exe}", "{case}", "renamed"]
+claims = { line = ["renamed: sub, moved and moved/inner/x.txt"] }
+false = { run = ["{out}/watch{exe}", "{case}", "renamed", "still"] }
+
+[[case]]
+name = "the root of the drive of a folder, or /, can be watched"
+run = ["{out}/watch{exe}", "{case}", "root"]
+claims = { line = ["root: watched"] }
+false = { run = ["{out}/watch{exe}", "{case}", "root", "missing"] }
+
+[[case]]
+name = "a watch of a folder that is not there, or of a file, is refused"
+run = ["{out}/watch{exe}", "{case}", "missing"]
+claims = { line = ["missing: refused, file: refused"] }
+false = { run = ["{out}/watch{exe}", "{case}", "missing", "made"] }
+
+[[case]]
+name = "a watch is refused when a call that it needs fails, and a later one is made"
+run = ["{out}/watch{exe}", "{case}", "refuse"]
+fail = { calloc = 1, malloc = 1, realloc = 1, inotify_init1 = 1, os_path_whole = 1, os_folder_open = 1, os_mutex_create = 1, os_lib_open = 1, os_lib_get_symbol = 1, os_core_string = 1, os_core_array = 1, os_core_create = 1, os_core_start = 1, GetFinalPathNameByHandleW = 1, CreateFileW = 3, ReadDirectoryChangesW = 1 }
+claims = { matches = ["refuse: [1-9][0-9]* refused, then made"] }
+false = { fail = {} }
+
+[[case]]
+name = "a watch is refused when a later call that it needs fails, and a later one is made"
+run = ["{out}/watch{exe}", "{case}", "refuse"]
+fail = { calloc = 2, malloc = 2, inotify_add_watch = 2, os_core_create = 1, ReadDirectoryChangesW = 2 }
+claims = { matches = ["refuse: [1-9][0-9]* refused, then made"] }
+false = { fail = {} }
