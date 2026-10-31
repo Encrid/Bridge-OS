@@ -19,14 +19,13 @@ static int end_folder(os_watch_t *w, os_watched_t *f, uint32_t mask)
     return (OS_AGAIN);
 }
 
-static void follow_folder(os_watch_t *w, const os_watched_t *f, uint32_t mask)
+static void follow_folder(os_watch_t *w, uint32_t mask)
 {
-    uint32_t parts = f->parts + 1;
-
-    if ((mask & (IN_CREATE | IN_MOVED_TO)) && parts < w->depth) {
+    if ((mask & (IN_CREATE | IN_MOVED_TO))
+        && os_is_within(w->name, w->depth - 1)) {
         snprintf(w->full + w->base, sizeof(w->full) - w->base, "%s",
             w->name);
-        w->stopped = os_add_tree(w, strlen(w->full), parts) != 0;
+        w->stopped = os_add_tree(w, strlen(w->full)) != 0;
         w->full[w->base] = '\0';
     }
     if (mask & IN_MOVED_FROM)
@@ -45,7 +44,7 @@ static int give_name(os_watch_t *w, const os_watched_t *f,
     }
     memcpy(w->name + at, e->name, strlen(e->name) + 1);
     if (e->mask & IN_ISDIR)
-        follow_folder(w, f, e->mask);
+        follow_folder(w, e->mask);
     *name = w->name;
     return (1);
 }
@@ -57,7 +56,7 @@ int os_use_event(os_watch_t *w, const char **name)
 
     w->at += sizeof(*e) + e->len;
     if (e->mask & IN_Q_OVERFLOW) {
-        w->stopped = os_add_tree(w, w->base, 0) != 0;
+        w->stopped = os_add_tree(w, w->base) != 0;
         return (2);
     }
     if (!f)

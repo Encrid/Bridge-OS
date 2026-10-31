@@ -19,7 +19,6 @@ constexpr size_t OS_FOLDERS_ROOM = 16;
 
 typedef struct os_watched {
     int wd;
-    uint32_t parts;
     char *path;
 } os_watched_t;
 
@@ -38,7 +37,7 @@ struct os_watch {
     alignas(struct inotify_event) char events[OS_EVENTS_ROOM];
 };
 
-int os_add_tree(os_watch_t *w, size_t end, uint32_t parts);
+int os_add_tree(os_watch_t *w, size_t end);
 
 os_watched_t *os_find_folder(const os_watch_t *w, int wd);
 

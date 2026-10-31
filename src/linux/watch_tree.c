@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "os_watch.h"
+#include "../common/os_common.h"
 
 static bool grow_table(os_watch_t *w)
 {
@@ -24,7 +25,7 @@ static bool grow_table(os_watch_t *w)
     return (true);
 }
 
-static bool keep_folder(os_watch_t *w, int wd, uint32_t parts)
+static bool keep_folder(os_watch_t *w, int wd)
 {
     os_watched_t *f = os_find_folder(w, wd);
     size_t size = strlen(w->full + w->base) + 1;
@@ -41,12 +42,18 @@ static bool keep_folder(os_watch_t *w, int wd, uint32_t parts)
         f = &w->folders[w->count];
         w->count++;
     }
-    *f = (os_watched_t){ .wd = wd, .parts = parts, .path = path };
+    *f = (os_watched_t){ .wd = wd, .path = path };
     return (true);
 }
 
-static int add_folders(os_watch_t *w, os_folder_t *in, size_t end,
-    uint32_t parts)
+static bool has_deeper(const os_watch_t *w, const char *path)
+{
+    if (!*path)
+        return (w->depth > 1);
+    return (os_is_within(path, w->depth - 2));
+}
+
+static int add_folders(os_watch_t *w, os_folder_t *in, size_t end)
 {
     const char *between = end > w->base ? "/" : "";
     bool is_folder = false;
@@ -58,21 +65,21 @@ static int add_folders(os_watch_t *w, os_folder_t *in, size_t end,
             continue;
         snprintf(w->full + end, sizeof(w->full) - end, "%s%s", between,
             name);
-        status = os_add_tree(w, strlen(w->full), parts);
+        status = os_add_tree(w, strlen(w->full));
         w->full[end] = '\0';
     }
     return (status);
 }
 
-int os_add_tree(os_watch_t *w, size_t end, uint32_t parts)
+int os_add_tree(os_watch_t *w, size_t end)
 {
     int wd = inotify_add_watch(w->fd, w->full, OS_WATCH_MASK);
-    int status = wd < 0 || !keep_folder(w, wd, parts) ? -1 : 0;
+    int status = wd < 0 || !keep_folder(w, wd) ? -1 : 0;
     os_folder_t *in = nullptr;
 
-    if (!status && parts + 1 < w->depth) {
+    if (!status && has_deeper(w, w->full + w->base)) {
         in = os_folder_open(w->full);
-        status = in ? add_folders(w, in, end, parts + 1) : -1;
+        status = in ? add_folders(w, in, end) : -1;
         os_folder_close(in);
     }
     return (status);
