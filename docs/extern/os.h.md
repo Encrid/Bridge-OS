@@ -160,7 +160,7 @@ Each system tells the changes in its own way:
 
 - On Windows, `ReadDirectoryChangesW` tells the changes, and a second one watches the folder above `folder` for its move. The root of a drive cannot move, and has no folder above it.
 - On Linux, `inotify` watches each folder down to the depth. A folder that comes in gets its watch before `os_watch_take` gives its name. `max_user_instances` and `max_user_watches` of the system limit the count of the watches and of their folders. A folder whose path is longer than `PATH_MAX` cannot be watched.
-- On macOS, FSEvents tells the changes. The layer loads `CoreServices` when it starts a watch, so a program that links `os.a` links no framework.
+- On macOS, FSEvents tells the changes. The layer loads `CoreServices` when it starts a watch, so a program that links `os.a` links no framework. FSEvents can tell a change from just before the start, for example the removal of an earlier folder with the same path.
 
 A watch gives 2 when the changes between two takes do not fit. It keeps 64 KiB on Windows and on macOS, and `max_queued_events` changes on Linux. FSEvents can also lose changes.
 A take with no change makes no call of the system on Windows and on macOS, and one call of `read` on Linux.
