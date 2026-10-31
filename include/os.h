@@ -13,6 +13,7 @@ typedef struct os_thread os_thread_t;
 typedef struct os_mutex os_mutex_t;
 typedef struct os_event os_event_t;
 typedef struct os_folder os_folder_t;
+typedef struct os_watch os_watch_t;
 typedef void (*os_thread_fn_t)(void *arg);
 
 constexpr uint64_t OS_SECOND = 1'000'000'000;
@@ -71,6 +72,12 @@ void os_event_wait(os_event_t *e, uint64_t nanos);
     size_t *len);
 
 void os_folder_close(os_folder_t *f);
+
+[[nodiscard]] os_watch_t *os_watch_start(const char *folder, uint32_t depth);
+
+[[nodiscard]] int os_watch_take(os_watch_t *w, const char **name);
+
+void os_watch_stop(os_watch_t *w);
 
 [[nodiscard]] char *os_path_whole(const char *path);
 

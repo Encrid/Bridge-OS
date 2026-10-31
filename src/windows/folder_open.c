@@ -19,7 +19,7 @@ static wchar_t *widen(const char *text)
     return (wide);
 }
 
-static wchar_t *get_whole(const char *path)
+wchar_t *os_get_whole(const char *path)
 {
     wchar_t *wide = widen(path);
     wchar_t *whole = nullptr;
@@ -45,7 +45,7 @@ os_folder_t *os_folder_open(const char *path)
     if (!f)
         return (nullptr);
     f->find = INVALID_HANDLE_VALUE;
-    f->whole = get_whole(path);
+    f->whole = os_get_whole(path);
     if (f->whole) {
         len = wcslen(f->whole);
         wmemcpy(f->whole + len, L"\\*", 3);
