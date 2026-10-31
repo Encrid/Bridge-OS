@@ -477,11 +477,17 @@ static bool run_place(const char *mode, bool other)
 
 int main(int argc, char **argv)
 {
+    static char run[1024];
+    char name[64];
     bool other = argc == 4;
 
     if (argc < 3)
         return (printf("usage: watch <folder> <mode> [other]\n"), 2);
+    snprintf(name, sizeof(name), "run_%llu", (unsigned long long)os_get_now());
     base = argv[1];
+    make_folder(name);
+    snprintf(run, sizeof(run), "%s/%s", argv[1], name);
+    base = run;
     make_folder("watched");
     make_folder("beside");
     if (!run_mode(argv[2], other) && !run_place(argv[2], other))
