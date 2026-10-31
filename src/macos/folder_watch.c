@@ -25,7 +25,7 @@ static bool make_parts(os_watch_t *w, const char *folder)
     if (!w->lock)
         return (false);
     w->queue = os_queue_make();
-    return (w->queue && os_core_load(w) && os_open_stream(w));
+    return (os_core_load(w) && os_open_stream(w));
 }
 
 os_watch_t *os_watch_start(const char *folder, uint32_t depth)

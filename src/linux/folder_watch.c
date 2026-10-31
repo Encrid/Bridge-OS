@@ -26,7 +26,7 @@ os_watch_t *os_watch_start(const char *folder, uint32_t depth)
         snprintf(w->full, sizeof(w->full), "%s/", whole);
     free(whole);
     w->base = strlen(w->full);
-    if (w->fd >= 0 && w->folders && w->base && !os_add_tree(w, w->base, 0))
+    if (w->fd >= 0 && w->folders && w->base && !os_add_tree(w, w->base))
         return (w);
     os_watch_stop(w);
     return (nullptr);
