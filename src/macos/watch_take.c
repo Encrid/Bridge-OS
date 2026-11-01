@@ -37,6 +37,7 @@ int os_watch_take(os_watch_t *w, const char **name)
 
     if (w->at < w->reading->used)
         return (give_name(w, name));
+    os_core_flush(w);
     os_mutex_lock(w->lock);
     status = swap_names(w);
     os_mutex_unlock(w->lock);

@@ -12,6 +12,7 @@ constexpr char NAMES[CORE_CALLS][48] = {
     "kCFTypeArrayCallBacks", "CFRelease", "FSEventStreamCreate",
     "FSEventStreamSetDispatchQueue", "FSEventStreamStart",
     "FSEventStreamStop", "FSEventStreamInvalidate", "FSEventStreamRelease",
+    "FSEventStreamFlushSync", "FSEventsGetCurrentEventId",
 };
 
 bool os_core_load(os_watch_t *w)
@@ -41,9 +42,10 @@ void *os_core_create(os_watch_t *w, const void *paths,
     os_events_fn_t *on_events)
 {
     os_context_t context = { .info = w };
+    uint64_t since = ((os_now_fn_t *)w->calls[CORE_NOW])();
 
     return (((os_create_fn_t *)w->calls[CORE_CREATE])(nullptr, on_events,
-        &context, paths, OS_SINCE_NOW, OS_LATENCY, OS_STREAM_FLAGS));
+        &context, paths, since, OS_LATENCY, OS_STREAM_FLAGS));
 }
 
 bool os_core_start(os_watch_t *w)

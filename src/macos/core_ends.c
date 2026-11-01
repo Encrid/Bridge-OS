@@ -15,6 +15,11 @@ void os_core_release(os_watch_t *w, const void *object)
     ((os_release_fn_t *)w->calls[CORE_RELEASE])(object);
 }
 
+void os_core_flush(os_watch_t *w)
+{
+    ((os_stream_fn_t *)w->calls[CORE_FLUSH])(w->stream);
+}
+
 void os_core_end(os_watch_t *w)
 {
     if (w->started)

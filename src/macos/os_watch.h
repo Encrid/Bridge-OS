@@ -13,7 +13,6 @@ constexpr size_t OS_NAMES_ROOM = 65536;
 constexpr uint32_t OS_EVENTS_LOST = 0x00000001;
 constexpr uint32_t OS_EVENTS_ENDED = 0x00000020 | 0x00000080;
 constexpr uint32_t OS_STREAM_FLAGS = 0x00000002 | 0x00000004 | 0x00000010;
-constexpr uint64_t OS_SINCE_NOW = UINT64_MAX;
 constexpr double OS_LATENCY = 0.05;
 
 enum os_core : uint32_t {
@@ -27,6 +26,8 @@ enum os_core : uint32_t {
     CORE_STOP,
     CORE_INVALIDATE,
     CORE_FREE,
+    CORE_FLUSH,
+    CORE_NOW,
     CORE_CALLS,
 };
 
@@ -42,6 +43,7 @@ typedef void *os_create_fn_t(const void *allocator, os_events_fn_t *callback,
 typedef void os_queue_fn_t(void *stream, void *queue);
 typedef unsigned char os_start_fn_t(void *stream);
 typedef void os_stream_fn_t(void *stream);
+typedef uint64_t os_now_fn_t(void);
 
 typedef struct os_names {
     size_t used;
@@ -88,6 +90,8 @@ bool os_core_start(os_watch_t *w);
 void os_core_queue(os_watch_t *w);
 
 void os_core_release(os_watch_t *w, const void *object);
+
+void os_core_flush(os_watch_t *w);
 
 void os_core_end(os_watch_t *w);
 
