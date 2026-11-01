@@ -12,7 +12,6 @@ No header of the system declares FSEvents for a build with no SDK, so this heade
 | `OS_EVENTS_LOST` | `kFSEventStreamEventFlagMustScanSubDirs`, which FSEvents sets when it lost events. |
 | `OS_EVENTS_ENDED` | `kFSEventStreamEventFlagRootChanged` and `kFSEventStreamEventFlagUnmount`: the folder moved or went away. |
 | `OS_STREAM_FLAGS` | `kFSEventStreamCreateFlagNoDefer`, `kFSEventStreamCreateFlagWatchRoot` and `kFSEventStreamCreateFlagFileEvents`. |
-| `OS_SINCE_NOW` | `kFSEventStreamEventIdSinceNow`: the stream tells only the changes after its start. |
 | `OS_LATENCY` | 0.05: the seconds that FSEvents waits to put later changes together. |
 
 ## Types
@@ -21,7 +20,7 @@ No header of the system declares FSEvents for a build with no SDK, so this heade
 | --- | --- |
 | `enum os_core` | The index of each part of CoreServices in `calls`, and `CORE_CALLS`, their count. |
 | `os_events_fn_t` | The function that FSEvents calls with a list of changes. Its 6 parameters are the parameters of `FSEventStreamCallback`. |
-| `os_string_fn_t`, `os_array_fn_t`, `os_release_fn_t`, `os_create_fn_t`, `os_queue_fn_t`, `os_start_fn_t`, `os_stream_fn_t` | The functions of CoreServices that the watch calls, with their parameters in the types of C. |
+| `os_string_fn_t`, `os_array_fn_t`, `os_release_fn_t`, `os_create_fn_t`, `os_queue_fn_t`, `os_start_fn_t`, `os_stream_fn_t`, `os_now_fn_t` | The functions of CoreServices that the watch calls, with their parameters in the types of C. |
 | `os_names_t` | A buffer of names, each with its end, and `used`, the count of its bytes. |
 | `os_context_t` | The `FSEventStreamContext` of a stream. Its `info` is the watch. |
 
@@ -53,5 +52,5 @@ The watch of `os_watch_start`, on macOS: `docs/intern/macos/watch_events.c.md`, 
 | --- | --- |
 | `os_core_load(w)` | Loads CoreServices and its parts: `docs/intern/macos/core_calls.c.md`. |
 | `os_core_string(w)`, `os_core_array(w, real)`, `os_core_create(w, paths, on_events)`, `os_core_start(w)` | The calls of CoreServices that can fail. |
-| `os_core_queue(w)`, `os_core_release(w, object)`, `os_core_end(w)` | The other calls: `docs/intern/macos/core_ends.c.md`. |
+| `os_core_queue(w)`, `os_core_release(w, object)`, `os_core_flush(w)`, `os_core_end(w)` | The other calls: `docs/intern/macos/core_ends.c.md`. |
 | `os_open_stream(w)` | Makes the stream and starts it: `docs/intern/macos/watch_events.c.md`. |

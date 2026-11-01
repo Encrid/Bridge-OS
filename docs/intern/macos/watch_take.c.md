@@ -8,10 +8,11 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The watch*.
 The callback fills `filling`, and the take reads `reading`. Thus a name stays valid while the callback adds more names.
 
 1. If `reading` holds a name that the take did not give, the take gives it, with no lock.
-2. Else the take holds `lock`, and `swap_names` exchanges the two buffers and empties the new `filling`.
+2. Else `os_core_flush` hands out, through the callback, the changes that FSEvents keeps back. Then the take holds `lock`, and `swap_names` exchanges the two buffers and empties the new `filling`.
 3. After `ended`, `swap_names` gives -1 and exchanges no buffer. After `lost`, it empties `reading` too, and gives 2.
 
-A take with no change locks and unlocks the mutex, and makes no call of the system.
+The take holds no lock during the flush, because the callback takes `lock`.
+A take with no change makes one call of FSEvents, and locks and unlocks the mutex.
 
 ## Functions
 

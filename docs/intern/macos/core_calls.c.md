@@ -17,5 +17,5 @@ Each call that can fail is a function of its own. Thus a case can make it fail b
 | `os_core_load(w)` | Loads CoreServices and its parts, as *The load* tells. Tells if each part was found. |
 | `os_core_string(w)` | Gives the path of the folder as a `CFStringRef`, or `nullptr`. |
 | `os_core_array(w, real)` | Gives a `CFArrayRef` that holds `real`, or `nullptr`. |
-| `os_core_create(w, paths, on_events)` | Gives a stream of FSEvents for `paths`, with `on_events` as its callback, or `nullptr`. |
+| `os_core_create(w, paths, on_events)` | Gives a stream of FSEvents for `paths`, which starts at the current event of `FSEventsGetCurrentEventId`, with `on_events` as its callback, or `nullptr`. |
 | `os_core_start(w)` | Starts the stream. Sets `started`, and tells if the stream started. |

@@ -149,6 +149,7 @@ At a depth of 1, the watch tells the entries of `folder`. At 2, it also tells th
 | -1 | The watch stopped, for example because `folder` was removed or moved. Each later call also gives -1. |
 
 - An entry can come more than once. A move gives the old name and the new name.
+- A take gives each change that was made before the call, on each system.
 - A name can be a folder. Then the entries in that folder can have changed too, with no names of their own. For example, a folder that moves in brings its entries. Thus the caller looks at that folder.
 - No path has more names than `depth`.
 - One thread at a time uses a watch.
@@ -160,10 +161,10 @@ Each system tells the changes in its own way:
 
 - On Windows, `ReadDirectoryChangesW` tells the changes, and a second one watches the folder above `folder` for its move. The root of a drive cannot move, and has no folder above it.
 - On Linux, `inotify` watches each folder down to the depth. A folder that comes in gets its watch before `os_watch_take` gives its name. `max_user_instances` and `max_user_watches` of the system limit the count of the watches and of their folders. A folder whose path is longer than `PATH_MAX` cannot be watched.
-- On macOS, FSEvents tells the changes. The layer loads `CoreServices` when it starts a watch, so a program that links `os.a` links no framework. FSEvents can tell a change from just before the start, for example the removal of an earlier folder with the same path.
+- On macOS, FSEvents tells the changes. The layer loads `CoreServices` when it starts a watch, so a program that links `os.a` links no framework. FSEvents can tell a change from just before the start, for example the removal of an earlier folder with the same path. Each take first makes FSEvents hand out the changes that it holds for its latency, with `FSEventStreamFlushSync`. The stream starts at the current event of FSEvents, so that the flush has an event to start from.
 
 A watch gives 2 when the changes between two takes do not fit. It keeps 64 KiB on Windows and on macOS, and `max_queued_events` changes on Linux. FSEvents can also lose changes.
-A take with no change makes no call of the system on Windows and on macOS, and one call of `read` on Linux.
+With no change, a take makes no call of the system on Windows, one call of `read` on Linux, and one of FSEvents on macOS.
 
 ## The signals
 

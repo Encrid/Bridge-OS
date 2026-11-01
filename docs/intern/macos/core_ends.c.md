@@ -14,4 +14,5 @@ Then `os_queue_wait` waits until the queue ran each callback that it held.
 | --- | --- |
 | `os_core_queue(w)` | Puts the stream on the queue of the watch with `FSEventStreamSetDispatchQueue`. |
 | `os_core_release(w, object)` | Releases an object of CoreFoundation with `CFRelease`. |
+| `os_core_flush(w)` | Makes FSEvents run the callback for each change that it holds, with `FSEventStreamFlushSync`, and returns after the callback ran. |
 | `os_core_end(w)` | Stops, takes off and releases the stream, and waits for the queue, as *The end of a stream* tells. |
