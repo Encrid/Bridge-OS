@@ -5,7 +5,7 @@ Each function keeps the contract of `docs/extern/os.h.md`, *The watch*.
 
 ## The stream
 
-The stream watches the real path of the folder, with events for each file, from `OS_SINCE_NOW`.
+The stream watches the real path of the folder, with events for each file, from the event id at its start.
 FSEvents calls `on_events` on the queue of the watch, with the paths and the flags of the changes. The callback holds `lock` while it adds them.
 `kFSEventStreamCreateFlagWatchRoot` makes FSEvents tell a move or a removal of the folder, and also of a folder above it.
 
