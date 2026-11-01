@@ -239,6 +239,12 @@ claims = { line = ["quiet: 1000 of 1000 takes gave 0, at once"] }
 false = { run = ["{out}/watch{exe}", "{case}", "quiet", "busy"] }
 
 [[case]]
+name = "a take gives a change made just before it, with no wait"
+run = ["{out}/watch{exe}", "{case}", "soon"]
+claims = { line = ["soon: a.txt"], lacks = ["failed assertion"] }
+false = { run = ["{out}/watch{exe}", "{case}", "soon", "none"] }
+
+[[case]]
 name = "a burst of new entries comes as each of their names"
 run = ["{out}/watch{exe}", "{case}", "burst"]
 claims = { line = ["burst: 100 of 100"] }

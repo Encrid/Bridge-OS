@@ -229,6 +229,25 @@ static void run_quiet(bool busy)
     os_watch_stop(t.w);
 }
 
+static void run_soon(bool none)
+{
+    waiting_t t = { .end = "marker" };
+    const char *name = nullptr;
+    int got = 0;
+
+    if (!start(&t, "watched", 1, "soon"))
+        return;
+    settle(&t);
+    for (got = os_watch_take(t.w, &name); got == 1;
+        got = os_watch_take(t.w, &name))
+        note(&t, name);
+    if (!none)
+        put_file("watched/a.txt", "w");
+    got = os_watch_take(t.w, &name);
+    printf("soon: %s\n", got == 1 ? name : "nothing");
+    os_watch_stop(t.w);
+}
+
 static void run_burst(bool beside)
 {
     waiting_t t = { .end = "marker" };
@@ -443,6 +462,8 @@ static bool run_mode(const char *mode, bool other)
         run_zero(other);
     else if (!strcmp(mode, "quiet"))
         run_quiet(other);
+    else if (!strcmp(mode, "soon"))
+        run_soon(other);
     else if (!strcmp(mode, "burst"))
         run_burst(other);
     else if (!strcmp(mode, "overflow"))
