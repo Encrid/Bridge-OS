@@ -16,7 +16,7 @@ SCENARIOS = {
     'termination twice': {'posix': ['SIGTERM', 'SIGTERM'], 'windows': ['ctrl-break', 'ctrl-break']},
     'hang-up': {'posix': ['SIGHUP'], 'windows': ['close']},
     'interrupt, hang-up': {'posix': ['SIGINT', 'SIGHUP'], 'windows': ['ctrl-c', 'close']},
-    'ignored only': {'ignored': True, 'posix': ['SIGHUP'], 'windows': ['ctrl-c']},
+    'ignored only': {'ignored': True, 'posix': ['SIGINT'], 'windows': ['ctrl-c']},
     'ignored, then caught': {'ignored': True, 'posix': ['SIGHUP', 'SIGINT'], 'windows': ['ctrl-c', 'close']},
     'caught, then caught': {'posix': ['SIGHUP', 'SIGINT'], 'windows': ['ctrl-c', 'close']},
     'closed output': {'output': 'closed', 'posix': ['SIGINT'], 'windows': ['ctrl-c']},

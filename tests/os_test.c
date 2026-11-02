@@ -191,8 +191,6 @@ int main(int argc, char **argv)
 
     if (argc < 2)
         return (printf("FAIL: no workdir\n"), 1);
-    if (argc > 2)
-        return (1);
     dir = argv[1];
 
     base = os_reserve(8192, 4096);
