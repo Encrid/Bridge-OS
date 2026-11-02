@@ -2,7 +2,7 @@
 name = "the os layer runs every call and its error paths"
 run = ["{out}/os{exe}", "{case}"]
 claims = { matches = ["os ok"] }
-false = { run = ["{out}/os{exe}", "{case}", "fail"] }
+false = { run = ["{out}/os{exe}", "{case}/none"] }
 
 [[case]]
 name = "an event is refused when a call that it needs fails, and a later one is made"
