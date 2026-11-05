@@ -14,10 +14,27 @@ typedef struct os_mutex os_mutex_t;
 typedef struct os_event os_event_t;
 typedef struct os_folder os_folder_t;
 typedef struct os_watch os_watch_t;
+typedef struct os_process os_process_t;
 typedef void (*os_thread_fn_t)(void *arg);
+
+typedef struct os_process_start {
+    const char *const *argv;
+    const char *folder;
+    const char *const *env;
+    const char *const *unset;
+    bool errors_apart;
+    bool signals;
+    bool ignore_interrupt;
+} os_process_start_t;
 
 constexpr uint64_t OS_SECOND = 1'000'000'000;
 constexpr uint64_t OS_FOREVER = UINT64_MAX;
+constexpr int OS_INPUT = 1;
+constexpr int OS_OUTPUT = 2;
+constexpr int OS_ERRORS = 3;
+constexpr int OS_INTERRUPT = 1;
+constexpr int OS_TERMINATION = 2;
+constexpr int OS_HANG_UP = 3;
 
 [[nodiscard]] void *os_reserve(size_t reserve, size_t commit);
 
@@ -86,5 +103,45 @@ void os_watch_stop(os_watch_t *w);
 [[nodiscard]] int os_signal_catch(const char *line);
 
 bool os_signal_is_caught(void);
+
+[[nodiscard]] os_process_t *os_process_start(const os_process_start_t *start);
+
+[[nodiscard]] int os_process_write(os_process_t *p, const void *bytes,
+    size_t len);
+
+void os_process_close(os_process_t *p, int stream);
+
+[[nodiscard]] int os_process_read(os_process_t *p, uint64_t nanos,
+    const char **bytes, size_t *len);
+
+[[nodiscard]] int os_process_signal(os_process_t *p, int which);
+
+void os_process_kill(os_process_t *p);
+
+[[nodiscard]] int os_process_wait(os_process_t *p, uint64_t nanos,
+    int64_t *status);
+
+void os_process_free(os_process_t *p);
+
+[[nodiscard]] int os_file_write(const char *path, const void *bytes,
+    size_t len, bool executable);
+
+[[nodiscard]] int os_path_entry(const char *path);
+
+[[nodiscard]] int os_path_move(const char *from, const char *to);
+
+[[nodiscard]] int os_path_remove(const char *path);
+
+[[nodiscard]] int os_link_make(const char *path, const char *target);
+
+[[nodiscard]] char *os_env_get(const char *name);
+
+[[nodiscard]] char *os_path_find(const char *name);
+
+[[nodiscard]] char *os_get_program_path(void);
+
+[[nodiscard]] int os_get_free_port(void);
+
+[[nodiscard]] uint32_t os_get_processor_count(void);
 
 #endif
