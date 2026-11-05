@@ -93,7 +93,7 @@ claims = { status = 0, order = ["ready", "caught", "stopped"] }
 false = { script = [{ wait = "ready", signal = "interrupt" }, { wait = "a second signal ends it at once", signal = "hang-up", pause = 1 }] }
 
 [[case]]
-name = "the first signal writes the line of the host at once, while the program hangs"
+name = "the first signal writes the line at once, while the program hangs"
 run = ["{out}/signal{exe}", "a second signal ends it at once"]
 stdin = "\n\n"
 script = [{ wait = "ready", signal = "interrupt", pause = 1 }]
@@ -136,7 +136,7 @@ false = { script = [{ wait = "ready", close = "output", pause = 1 }, { signal = 
 [[case]]
 name = "the zip of a release holds fail.toml"
 run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out", "--pack"]
-claims = { status = 0, order = ["{case}/out/bridge-os-{target}.zip", "fail.toml", "package proof: bridge-os ran"] }
+claims = { status = 0, order = ["{case}/out/mosl-{target}.zip", "fail.toml", "package proof: mosl ran"] }
 false = { run = ["{python}", "{root}/.toolchain/tools/build.py", "--root", "{root}", "--out", "{case}/out", "--pack", "--leave", "fail.toml"] }
 
 [[case]]

@@ -3,8 +3,8 @@
 **
 ** Under the GNU Affero General Public License, version 3 only: see license.
 */
-#ifndef BRIDGE_OS_H
-    #define BRIDGE_OS_H
+#ifndef MOSL_OS_H
+    #define MOSL_OS_H
 
     #include <stddef.h>
     #include <stdint.h>

@@ -1,5 +1,5 @@
 [project]
-name = "bridge-os"
+name = "mosl"
 
 [test]
 cases = "tests/shared/cases"
