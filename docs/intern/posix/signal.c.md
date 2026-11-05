@@ -1,11 +1,11 @@
 # src/posix/signal.c
 
-On Linux and macOS, this file gives the signals of `include/os.h`: a flag for the host, a line, and an end at once.
+On Linux and macOS, this file gives the signals of `include/os.h`: a flag for the caller, a line, and an end at once.
 Each function keeps the contract of `docs/extern/os.h.md`, *Functions*.
 
 ## The state
 
-`get_stop` keeps one `struct os_stop` of `src/posix/os_types.h`: the flag, the line of the host and the length of the line.
+`get_stop` keeps one `struct os_stop` of `src/posix/os_types.h`: the flag, the line of the caller and the length of the line.
 A handler of a signal can reach only an object of static storage, and safely only an atomic object that has no lock.
 So each field is atomic, and each of them has no lock on each target.
 `os_signal_catch` stores the line and its length before it gives the handler to a signal.
@@ -22,7 +22,7 @@ If the flag was set already, the signal is a second one, and `catch_stop` calls 
 `write` and `_Exit` are safe in a handler of a signal.
 
 `catch_one` first reads the action of the signal. If it is `SIG_IGN`, the parent wants the signal ignored, and `catch_one` keeps it.
-`SA_RESTART` makes a call that a signal interrupts start again. Thus a stop does not make a read or a write of a module fail.
+`SA_RESTART` makes a call that a signal interrupts start again. Thus a stop does not make a read or a write of the program fail.
 
 The write of the line waits when the output is full.
 `SA_NODEFER` lets a second signal of the same kind run the handler again in that time, so the second signal still ends the process.

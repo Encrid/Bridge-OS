@@ -3,8 +3,8 @@
 **
 ** Under the GNU Affero General Public License, version 3 only: see license.
 */
-#ifndef BRIDGE_OS_WATCH_H
-    #define BRIDGE_OS_WATCH_H
+#ifndef MOSL_OS_WATCH_H
+    #define MOSL_OS_WATCH_H
 
     #include <limits.h>
     #include <sys/inotify.h>

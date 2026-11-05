@@ -13,7 +13,7 @@ static void wait_nothing([[maybe_unused]] void *context)
 
 void *os_queue_make(void)
 {
-    return (dispatch_queue_create("bridge-os.watch", nullptr));
+    return (dispatch_queue_create("mosl.watch", nullptr));
 }
 
 void os_queue_wait(void *queue)
