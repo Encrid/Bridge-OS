@@ -14,7 +14,7 @@ The flag and a second signal work as on Linux and macOS: `docs/intern/posix/sign
 `os_signal_catch` gives `catch_stop` to `SetConsoleCtrlHandler`.
 After Ctrl-C and Ctrl-Break, `catch_stop` gives `TRUE`, and the process goes on.
 Windows ends the process when the handler returns from an event of `ENDING`: the close of the console, a logoff or a shutdown.
-So for these events, `catch_stop` sleeps with no end, and the host ends the process itself.
+So for these events, `catch_stop` sleeps with no end, and the caller ends the process itself.
 Windows ends it after some seconds in any case.
 
 `catch_stop` looks for the event in the table `ENDING`. Thus one condition tells the 3 events apart from the others.

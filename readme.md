@@ -1,6 +1,6 @@
-# bridge-os
+# mosl
 
-bridge-os is the operating-system seam of Bridge, behind one header.
+mosl (my OS library) is a layer over the operating system, behind one header.
 
 ## Install
 
