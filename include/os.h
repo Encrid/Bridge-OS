@@ -140,6 +140,8 @@ void os_process_free(os_process_t *p);
 
 [[nodiscard]] char *os_get_program_path(void);
 
+[[nodiscard]] int os_output_write(const char *bytes, size_t len);
+
 [[nodiscard]] int os_get_free_port(void);
 
 [[nodiscard]] uint32_t os_get_processor_count(void);
