@@ -2,7 +2,7 @@
 
 This header gives the calls of the operating system, in the same form on each system.
 That is address space, shared libraries, threads, the clock, a mutex, an event, and folders, watches, paths, locks and signals.
-It also gives processes, files, the environment, a free port and the count of the processors.
+It also gives processes, files, the environment, the output, a free port and the count of the processors.
 
 ## The layer
 
@@ -147,6 +147,7 @@ Each function that can fail is `[[nodiscard]]`: the caller must use its result.
 | `os_env_get` | Gives a copy of the value of the variable `name`, as *The environment* tells. |
 | `os_path_find` | Finds the program `name`, as *The environment* tells. |
 | `os_get_program_path` | Gives the absolute path of the program of the process, which the caller frees, or `nullptr`. |
+| `os_output_write` | Writes all the `len` bytes to the standard output, as *The output* tells. Gives 0, or -1 if a write fails. |
 | `os_get_free_port` | Gives a port of TCP on `127.0.0.1` that no socket held at the call, or -1. Another program can take the port after the call. On Windows, the layer loads `ws2_32.dll` at the call, so a program that links `os.a` links no other library. |
 | `os_get_processor_count` | Gives the count of the processors that the process can use, or 0 if the system does not tell it. |
 
@@ -291,6 +292,8 @@ On Windows, the status is the exit code, from 0 to 4294967295.
 
 `os_process_kill` ends the process at once: with `SIGKILL` on Linux and macOS, and with `TerminateProcess` and the code 1 on Windows.
 It ends only the process, and not the processes that it started. A kill of a process that ended does nothing.
+`os_process_kill` can come from another thread, also while a read or a write of the process waits. That read or write then ends, as at the end of the process.
+Each other call of one process comes from one thread at a time.
 
 The signals of the process at its start:
 
@@ -343,3 +346,14 @@ It gives `nullptr` if the variable is not there, or if the copy fails.
 - Else the call looks in each folder of the `PATH` of the caller, in order.
 - On Windows, it also tries each extension of `PATHEXT`, if `name` has none.
 - It looks in the current folder only if `PATH` names it.
+
+## The output
+
+`os_output_write` writes all the bytes to the standard output, with no change and no text mode. Thus a line end stays `\n`, also on Windows.
+
+- On Linux and macOS, `write` runs until each byte is out. If a signal stops a write, the call writes the rest.
+- On Windows, `WriteFile` writes the bytes to a pipe or to a file.
+- A console of Windows gets `WriteConsoleW`, after the turn of the bytes from UTF-8 into UTF-16. Thus a path in UTF-8 shows right.
+- The bytes of one call go out with one call of the system when the system takes them all at once.
+
+It gives 0, or -1 if a write fails, for example when the output is closed. A write that fails does not end the caller.
